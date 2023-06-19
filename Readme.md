@@ -2,7 +2,7 @@
 
 *Steps*
 
-* To build a container ```bash compose up -d ```
+* To build a container ```bash docker compose up -d ```
 
 * To build an image ```bash  docker build -t mmogib/myjulia:latest --build-arg JULIA_VERSION=1.9.0 . ```
 
