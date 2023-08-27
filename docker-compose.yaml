@@ -1,12 +1,12 @@
-version: "3.8"
+version: "3"
 services: 
-  JULIA_APP:
-    container_name: containername
+  japp:
+    container_name: japp193
     build:
       context: .
       args:
-        - JULIA_VERSION=1.9.0
+        - JULIA_VERSION=1.9.3
     ports: 
-      - "1234:1234"
+      - "2311:1234"
     volumes: 
-      - .:/home/julia/code
+      - .:/home/code
