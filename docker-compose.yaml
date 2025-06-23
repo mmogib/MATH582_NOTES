@@ -1,12 +1,11 @@
-version: "3"
 services: 
-  japp:
-    container_name: japp193
+  t251:
+    container_name: T251MATH582
     build:
       context: .
       args:
-        - JULIA_VERSION=1.9.3
+        - JULIA_VERSION=1.11.5
     ports: 
-      - "2311:1234"
+      - "1582:1234"
     volumes: 
-      - .:/home/code
+      - .:/code
