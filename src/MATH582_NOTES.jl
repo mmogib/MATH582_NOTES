@@ -26,6 +26,17 @@ begin
 	# using IntervalArithmetic
 end
 
+# ╔═╡ a6148830-0424-4d85-af87-9efa87eaa4aa
+md"# Course Website"
+
+# ╔═╡ 45572d31-300f-4e40-a755-9c099c58551a
+md"# Syllabus"
+
+# ╔═╡ ed6a2919-8df2-4907-b7cb-93e4cf4c0500
+cm"""
+[Please read the syllabus of the course](https://www.dropbox.com/scl/fi/jhogaom1fl083tvwi730n/T251_MATH582_Syllabus.pdf?rlkey=twh1ndt5olgqkqglkohl7lwyl&dl=0)
+"""
+
 # ╔═╡ 79c52675-eedc-4426-9243-7e3f4945b508
 md"# Chapter 2: Convex Sets"
 
@@ -1775,6 +1786,9 @@ version = "1.8.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─a6148830-0424-4d85-af87-9efa87eaa4aa
+# ╟─45572d31-300f-4e40-a755-9c099c58551a
+# ╟─ed6a2919-8df2-4907-b7cb-93e4cf4c0500
 # ╟─79c52675-eedc-4426-9243-7e3f4945b508
 # ╟─fe06cac9-c8d8-40fa-a5b3-b32ba17c8e9d
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
