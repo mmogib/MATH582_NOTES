@@ -51,4 +51,7 @@ docs/site/
 # environment.
 Manifest.toml
 
+snippets.jl
+mds.md
+yamels.yaml
 

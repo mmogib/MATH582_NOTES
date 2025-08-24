@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.13
+# v0.20.14
 
 using Markdown
 using InteractiveUtils
@@ -12,12 +12,13 @@ begin
     using Latexify
     using HypertextLiteral
     using Colors
-    using LinearAlgebra, Random, Printf, SparseArrays
+    using LinearAlgebra, Random, Printf, SparseArrays, Statistics
     # using Symbolics
     # using SymPy
     using QRCoders
     using PrettyTables
 	# using Primes
+	using Polyhedra
     # using LinearSolve
     # using NonlinearSolve
     # using ForwardDiff
@@ -37,8 +38,139 @@ cm"""
 [Please read the syllabus of the course](https://www.dropbox.com/scl/fi/jhogaom1fl083tvwi730n/T251_MATH582_Syllabus.pdf?rlkey=twh1ndt5olgqkqglkohl7lwyl&dl=0)
 """
 
-# ╔═╡ 79c52675-eedc-4426-9243-7e3f4945b508
+# ╔═╡ 7bc65c80-3346-452e-b4de-e45ce3a19461
+md"## Orientation (15 min)"
+
+# ╔═╡ fcc354c2-c077-4a5a-9b84-db1d5f9f4ee7
+cm"""
+1. __What is Nonlinear Programming? (Motivation)__
+
+* Optimization of nonlinear objectives with equality/inequality constraints:
+  ```math
+  \min f(x) \quad \text{s.t. } g_i(x) \leq 0, \; h_j(x) = 0
+  ```
+* Extends **linear programming** → models many real-world problems.
+* Applications:
+  * **Economics:** utility & production optimization.
+  * **Engineering:** design of structures, energy systems, petroleum operations.
+  * **AI/ML:** training models, regularization, constrained optimization.
+* **Theme of the course:** Convexity → tractable optimization, strong theory, powerful algorithms.
+
+---
+
+2. __Course Logistics__
+
+* **Instructor:** Dr. Mohammed Alshahrani
+* **Textbook:** Bazaraa–Sherali–Shetty (*Nonlinear Programming: Theory and Algorithms*, 3rd ed.)
+* **Programming:** Julia (official docs + *Think Julia*).
+* **Lecture Notes:** All Pluto.jl notebooks posted at
+  👉 [MATH582 Notes](https://mmogib.github.io/MATH582_NOTES/) (QR code).
+
+---
+
+3. __Tools & Support__
+* **MATH582 TA (Custom GPT Assistant)**
+  👉 [MATH582 TA GPT](https://chatgpt.com/g/g-689da632cee8819192005e8adf53b82b-math582-ta) (QR code).
+  * Guides lecture content, proofs, and examples.
+  * Assists with Julia programming & assignments.
+  * Provides **feedback and grade access**.
+  * Use responsibly: **first attempt solutions, then use TA for hints and clarification.**
+
+---
+
+4. __Evaluation & Projects__
+* Homework & programming assignments: **10%**
+* **Individual Project: 20%**
+  * Week 3: proposal (1 page).
+  * Week 8: progress report (1 page).
+  * Week 14: 20-min presentation.
+  * Week 15: final report (≤20 pages, similarity < 20%).
+* Exam 1 (20%), Exam 2 (20%), Final Exam (30%).
+
+---
+
+5. __Expectations__
+* **Mathematical rigor:** proofs, derivations, optimality conditions.
+* **Computational rigor:** Julia implementation with complexity & stability checks.
+* **Academic integrity:** originality required; oral defense of assignments may be used.
+* **Active learning strategy:**
+  * Work interactively with Pluto notebooks.
+  * Use MATH582 TA as a **personal tutor**, not as a shortcut.
+
+"""
+
+# ╔═╡ 9d275485-9e6f-450e-8392-787ba3cda9a6
 md"# Chapter 2: Convex Sets"
+
+
+
+# ╔═╡ a889687a-ec1d-400d-901d-894e81fb5549
+md"""
+## 2.1 Convex Hulls
+
+__Learning outcomes__
+
+> 1. Define convex sets and convex combinations, with examples and counterexamples.  
+> 2. Apply closure properties of convex sets (intersection, Minkowski sum, Minkowski difference).  
+> 3. Describe convex hulls as both (i) all convex combinations of points, and (ii) the smallest convex set containing them.  
+> 4. State Carathéodory’s theorem and explain its geometric/algorithmic significance.  
+"""
+
+
+# ╔═╡ f26b7a51-3583-42da-8022-76a7aa6fec5a
+
+let 
+
+# Axes limits (adjust if you like)
+xlims = (-4.0, 4.0)
+ylims = (0.0, 5.0)
+
+# Grid for shading the feasible region x2 ≥ |x1|
+nx, ny = 500, 500
+xs = range(xlims[1], xlims[2], length=nx)
+ys = range(ylims[1], ylims[2], length=ny)
+
+# Mask: 1.0 where condition holds, NaN elsewhere (for contourf fill)
+Z = [ (y ≥ abs(x)) ? 1.0 : NaN for y in ys, x in xs ]
+
+p = contourf(xs, ys, Z; levels=1, fill=true, legend=false, alpha=0.5,
+             color=:lightblue, xlabel="x₁", ylabel="x₂",
+             title="S = {(x₁,x₂): x₂ ≥ |x₁|}", ratio=:equal, frame_style=:origin)
+
+# Draw boundary lines x2 =  x1 and x2 = -x1
+xs_n = range(xlims[1], 0, length=nx)
+xs_p = range(0,xlims[2], length=nx)
+plot!(xs_n,  -xs_n; lw=2, color=:blue, label="")
+plot!(xs_p, xs_p; lw=2, color=:blue, label="")
+
+p
+end
+
+
+# ╔═╡ 9e538d00-9783-436c-87f9-e0b9187cf5ba
+let
+	
+	# 1) Initialize Xoshiro RNG
+	rng = Xoshiro(582)              # seed for reproducibility
+	
+	# 2) Generate random points (40 in R²)
+	pts = rand(rng, 40, 2)
+	pts_= map(r->[r...],eachrow(pts)) |> collect
+	p=polyhedron(convexhull(pts_...))
+	# 3) Convex hull via Polyhedra (V-representation)
+	# v = vrep(pts)
+	# p = polyhedron(v)
+	removevredundancy!(p)
+	# p,polyhedron(convexhull([1, 0], [0, 1]))
+	# p=polyhedron(convexhull(pts[:]))
+	# removevredundancy!(p)
+	# # # 4) Plot hull + points
+	plot(p, ratio=:equal, alpha=0.3, label="conv(pts)")
+	scatter!(pts[:,1], pts[:,2], ms=3, color=:black, label="points")
+end
+
+# ╔═╡ 239e31ef-0016-4361-a132-04b7120f75fd
+
 
 # ╔═╡ fe06cac9-c8d8-40fa-a5b3-b32ba17c8e9d
 TableOfContents(title="📚 MATH582: Nonlinear Programming", indent=true, depth=4)
@@ -185,6 +317,162 @@ begin
 end
 
 
+# ╔═╡ b2805e6f-a669-433f-9352-0a1f97fc2a52
+cm"""
+__Course website:__ (Notes, Syllabus)
+$(post_img("https://www.dropbox.com/scl/fi/qxhlswxbb2cx4mgqvwuno/mshahrani_qrcode.png?rlkey=jqqkd2vo2z438dcfc776nakd3&dl=1"))
+
+---
+
+__ChatGPT:__ (Course AI assistant)
+$(post_img("https://www.dropbox.com/scl/fi/p783o7u8qqrzgxb77qn4x/chatgpt_qrcode.png?rlkey=7wxsf0f1927loqkwij6jwxrnl&dl=1"))
+
+"""
+
+# ╔═╡ 98d3cb65-7c5e-49d7-89df-5b32452a7067
+cm"""
+$(define("Convex sets (Definition 2.1.1)"))
+
+A set ``S\subseteq\mathbb{R}^n`` is **convex** if for all ``x^1,x^2\in S`` and all ``\lambda\in[0,1]``:  
+```math
+\lambda x^1 + (1-\lambda)x^2 \in S.
+```
+
+**Convex combinations:** 
+
+Finite sums ``\sum_{i=1}^k \lambda_i x^i`` with ``\lambda_i\ge 0``, ``\sum_i \lambda_i=1``.
+"""
+
+# ╔═╡ 80e8de21-61e6-4e8f-869c-a364eb07f42d
+cm"""
+$(define("Linear, Affine, and Convex Combinations"))
+
+Given points ``x^1, x^2, \dots, x^k \in \mathbb{R}^n`` and scalars ``\lambda_1, \dots, \lambda_k \in \mathbb{R}``:
+
+- **Linear combination**  
+```math
+x = \sum_{i=1}^k \lambda_i x^i
+````
+
+* **Affine combination**
+
+```math
+x = \sum_{i=1}^k \lambda_i x^i, \quad \text{with } \sum_{i=1}^k \lambda_i = 1
+```
+
+* **Convex combination**
+
+```math
+x = \sum_{i=1}^k \lambda_i x^i, \quad \text{with } \sum_{i=1}^k \lambda_i = 1, \; \lambda_i \ge 0
+```
+
+"""
+
+
+# ╔═╡ 660817e9-5a67-4eca-9722-d18e57bc5868
+cm"""
+$(bbl("Lemma","2.1.2 (closure properties)"))
+Let ``S_1, S_2`` be convex subsets of ``\mathbb{R}^n``. Then:
+1. ``S_1 \cap S_2`` is convex.  
+2. **Minkowski sum:** ``S_1 \oplus S_2 = \{x_1+x_2 : x_1\in S_1, x_2\in S_2\}`` is convex.  
+3. **Minkowski difference:** ``S_1 \ominus S_2 = \{x_1-x_2 : x_1\in S_1, x_2\in S_2\}`` is convex.
+$(ebl())
+
+**Proof ideas (1–2 lines each):**  
+- *(1)* If ``y^1,y^2\in S_1\cap S_2``, then each is in both sets; convex combinations stay in each set, hence in the intersection.  
+- *(2)* Write ``y^1=x_1^1+x_2^1``, ``y^2=x_1^2+x_2^2`` and use convexity of ``S_1`` and ``S_2`` componentwise:  
+  ``\lambda y^1+(1-\lambda)y^2=(\lambda x_1^1+(1-\lambda)x_1^2)+(\lambda x_2^1+(1-\lambda)x_2^2)\in S_1\oplus S_2``.  
+- *(3)* Same as (2) with differences.
+"""
+
+# ╔═╡ d46a3b04-cc28-4bda-90df-e95778f9bfa2
+cm"""
+$(define("Affine and Linear Hulls"))
+
+**Affine hull of a set ``S\subseteq\mathbb{R}^n``**  
+Smallest affine subspace containing \(S\).  Equivalently, the set of all **affine combinations** of points of \(S\):
+```math
+\operatorname{aff}(S)
+=\left\{\;\sum_{i=1}^k \lambda_i x^i \;:\; x^i\in S,\ \sum_{i=1}^k \lambda_i = 1,\ k\in\mathbb{N}\right\}.
+````
+
+Useful identity (any ``x^0\in S``):
+
+```math
+\operatorname{aff}(S) \;=\; x^0 \;+\; \operatorname{lin}(S - x^0).
+```
+
+**Linear hull of a set ``S\subseteq\mathbb{R}^n``**
+Smallest linear subspace (through the origin) containing ``S``; i.e. the **span** of ``S``.  Equivalently, all **linear combinations** of points of ``S``:
+
+```math
+\operatorname{lin}(S)
+=\left\{\;\sum_{i=1}^k \lambda_i x^i \;:\; x^i\in S,\ \lambda_i\in\mathbb{R},\ k\in\mathbb{N}\right\}.
+```
+"""
+
+# ╔═╡ 4b3aef5d-7009-4db1-bd29-04acf3bbaea3
+cm"""
+$(define("Convex hull (Definition 2.1.3)"))
+For ``S\subseteq\mathbb{R}^n``, the **convex hull** ``\operatorname{conv}(S)`` is the set of all **finite** convex combinations of points of ``S``:
+```math
+\operatorname{conv}(S)=\Big\{\sum_{i=1}^k \lambda_i x^i:\ x^i\in S,\ \lambda_i\ge 0,\ \sum_{i=1}^k\lambda_i=1,\ k\in\mathbb{N}\Big\}.
+```
+"""
+
+# ╔═╡ ed268a43-ac57-49a0-992e-8e9c16cc1d28
+cm"""
+$(bbl("Lemma","2.1.4 (minimality of the convex hull"))
+``\operatorname{conv}(S)`` is the **smallest convex set containing** ``S``:  
+```math
+\operatorname{conv}(S)=\bigcap\{C\supseteq S: C\text{ convex}\}.
+```
+$(ebl())
+**Proof idea:** Let ``T`` be all finite convex combinations from ``S``. Then ``T`` is convex and contains ``S``, so ``\operatorname{conv}(S)\subseteq T``. Conversely, any convex ``C\supseteq S`` must contain all such combinations, so ``T\subseteq C``. Hence equality.
+"""
+
+# ╔═╡ 6250662f-9589-47d4-80f6-be17341180f4
+cm"""
+$(define("Affinely Independent Points"))
+
+Points ``x^1,\dots,x^{k+1}\in\mathbb{R}^n`` are **affinely independent** iff the ``k`` vectors
+```math
+x^2-x^1,\; x^3-x^1,\; \dots,\; x^{k+1}-x^1
+```
+are **linearly independent**.  Equivalently, no point is an affine combination of the others, and
+``\dim\big(\operatorname{aff}\{x^1,\dots,x^{k+1}\}\big)=k``.
+"""
+
+# ╔═╡ 4c8505f9-7a53-4673-b1c2-26a82daf419d
+cm"""
+$(define("Polytope & simplex"))
+- If ``S`` is a **finite** set, then ``\operatorname{conv}(S)`` is a **polytope**.  
+- If the points of ``S`` are **affinely independent**, ``\operatorname{conv}(S)`` is a **simplex**.
+"""
+
+# ╔═╡ 91fed789-5722-4fbe-bb8f-98f44cd86a47
+cm"""
+$(bth("Carathéodory’s theorem"))
+If ``x\in\operatorname{conv}(S)\subseteq\mathbb{R}^n``, then ``x`` is a convex combination of at most **``n+1``** points of ``S``.
+$(ebl())
+
+**Proof idea (affine dependence reduction):** Start with any convex-combination representation of ``x`` using many points. In ``\mathbb{R}^n`` they are affinely dependent, so there is a nontrivial relation among them. Adjust coefficients along this relation to set one coefficient to zero without moving ``x``. Repeat until only ``n+1`` points remain.
+"""
+
+# ╔═╡ 2010bad9-f0b6-41f9-9467-0b9e89daabaa
+cm"""
+$(bbl("Examples",""))
+- **Two points:** ``\operatorname{conv}(\{a,b\})=\{\lambda a+(1-\lambda)b: \lambda\in[0,1]\}`` — the segment.  
+- **Triangle:** ``\operatorname{conv}(\{(0,0),(1,0),(0,1)\})`` is the filled triangle.  
+- **Minkowski sum:** ``[0,1]\oplus[0,2]=[0,3]``.
+"""
+
+# ╔═╡ c96c98c9-787d-4b06-a5e1-a3874b255938
+cm"""
+$(bbl("Julia demo — computing a 2D convex hull (Polyhedra.jl)"))
+This demo builds a convex hull from random points and plots the hull polygon.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -198,11 +486,13 @@ PlotThemes = "ccf2f8ad-2431-5c83-bf29-c5338b663b6a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoExtras = "ed5d0301-4775-4676-b788-cf71e66ff8ed"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 QRCoders = "f42e9828-16f3-11ed-2883-9126170b272d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 Colors = "~0.12.11"
@@ -214,6 +504,7 @@ PlotThemes = "~3.3.0"
 Plots = "~1.40.14"
 PlutoExtras = "~0.7.15"
 PlutoUI = "~0.7.65"
+Polyhedra = "~0.8.1"
 PrettyTables = "~2.4.0"
 QRCoders = "~1.4.5"
 """
@@ -222,9 +513,9 @@ QRCoders = "~1.4.5"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.5"
+julia_version = "1.11.6"
 manifest_format = "2.0"
-project_hash = "446629e05eb0e7183417d3ce2f414afcdf7906b0"
+project_hash = "d9dac5ca2be7c023aa422d3b7b2ed3f4451f10dc"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -264,6 +555,12 @@ version = "0.4.7"
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 version = "1.11.0"
 
+[[deps.BenchmarkTools]]
+deps = ["Compat", "JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "e38fbc49a620f5d0b660d7f543db1009fe0f8336"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.6.0"
+
 [[deps.BitFlags]]
 git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
@@ -285,6 +582,12 @@ deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jl
 git-tree-sha1 = "fde3bf89aead2e723284a8ff9cdf5b551ed700e8"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.18.5+0"
+
+[[deps.CodecBzip2]]
+deps = ["Bzip2_jll", "TranscodingStreams"]
+git-tree-sha1 = "84990fa864b7f2b4901901ca12736e45ee79068c"
+uuid = "523fee87-0ab8-5b00-afb7-3ecf72e48cfd"
+version = "0.8.5"
 
 [[deps.CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -321,6 +624,12 @@ deps = ["PrecompileTools"]
 git-tree-sha1 = "351d6f4eaf273b753001b2de4dffb8279b100769"
 uuid = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
 version = "0.9.1"
+
+[[deps.CommonSubexpressions]]
+deps = ["MacroTools"]
+git-tree-sha1 = "cda2cfaebb4be89c9084adaca7dd7333369715c5"
+uuid = "bbf7d656-a473-5ed7-a52c-81e309532950"
+version = "0.3.1"
 
 [[deps.Compat]]
 deps = ["TOML", "UUIDs"]
@@ -397,6 +706,18 @@ deps = ["Mmap"]
 git-tree-sha1 = "9e2f36d3c96a820c678f2f1f1782582fcf685bae"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
+
+[[deps.DiffResults]]
+deps = ["StaticArraysCore"]
+git-tree-sha1 = "782dd5f4561f5d267313f23853baaaa4c52ea621"
+uuid = "163ba53b-c6d8-5494-b064-1a9d43ac40c5"
+version = "1.1.0"
+
+[[deps.DiffRules]]
+deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
+git-tree-sha1 = "23163d55f885173722d1e4cf0f6110cdbaf7e272"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "1.15.1"
 
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -485,6 +806,16 @@ git-tree-sha1 = "9c68794ef81b08086aeb32eeaf33531668d5f5fc"
 uuid = "1fa38f19-a742-5d3f-a2b9-30dd87b9d5f8"
 version = "1.3.7"
 
+[[deps.ForwardDiff]]
+deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
+git-tree-sha1 = "910febccb28d493032495b7009dce7d7f7aee554"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "1.0.1"
+weakdeps = ["StaticArrays"]
+
+    [deps.ForwardDiff.extensions]
+    ForwardDiffStaticArraysExt = "StaticArrays"
+
 [[deps.FreeType]]
 deps = ["CEnum", "FreeType2_jll"]
 git-tree-sha1 = "907369da0f8e80728ab49c1c7e09327bf0d6d999"
@@ -526,6 +857,12 @@ deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "
 git-tree-sha1 = "d7ecfaca1ad1886de4f9053b5b8aef34f36ede7f"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
 version = "0.73.16+0"
+
+[[deps.GenericLinearAlgebra]]
+deps = ["LinearAlgebra", "Printf", "Random", "libblastrampoline_jll"]
+git-tree-sha1 = "54ee4866eb8c982ee23cf79230ca0aaf916c382b"
+uuid = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
+version = "0.3.15"
 
 [[deps.GeoFormatTypes]]
 git-tree-sha1 = "8e233d5167e63d708d41f87597433f59a0f213fe"
@@ -715,6 +1052,18 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
+
+[[deps.JSON3]]
+deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
+git-tree-sha1 = "196b41e5a854b387d99e5ede2de3fcb4d0422aae"
+uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+version = "1.14.2"
+
+    [deps.JSON3.extensions]
+    JSON3ArrowExt = ["ArrowTypes"]
+
+    [deps.JSON3.weakdeps]
+    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
@@ -908,6 +1257,12 @@ deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
+[[deps.MathOptInterface]]
+deps = ["BenchmarkTools", "CodecBzip2", "CodecZlib", "DataStructures", "ForwardDiff", "JSON3", "LinearAlgebra", "MutableArithmetics", "NaNMath", "OrderedCollections", "PrecompileTools", "Printf", "SparseArrays", "SpecialFunctions", "Test"]
+git-tree-sha1 = "c2514ede436071529470010540bc3a1441e8140c"
+uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+version = "1.39.0"
+
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
 git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
@@ -943,6 +1298,12 @@ version = "0.3.4"
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2023.12.12"
+
+[[deps.MutableArithmetics]]
+deps = ["LinearAlgebra", "SparseArrays", "Test"]
+git-tree-sha1 = "491bdcdc943fcbc4c005900d7463c9f216aabf4c"
+uuid = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+version = "1.6.4"
 
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
@@ -1128,6 +1489,22 @@ git-tree-sha1 = "3151a0c8061cc3f887019beebf359e6c4b3daa08"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.65"
 
+[[deps.Polyhedra]]
+deps = ["GenericLinearAlgebra", "LinearAlgebra", "MathOptInterface", "MutableArithmetics", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "754bc39995daff07ed01d7ebdc8c9cf6681d241e"
+uuid = "67491407-f73d-577b-9b50-8179a7c68029"
+version = "0.8.1"
+
+    [deps.Polyhedra.extensions]
+    PolyhedraGeometryBasicsExt = "GeometryBasics"
+    PolyhedraJuMPExt = "JuMP"
+    PolyhedraRecipesBaseExt = "RecipesBase"
+
+    [deps.Polyhedra.weakdeps]
+    GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+    JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
@@ -1149,6 +1526,10 @@ version = "2.4.0"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
+
+[[deps.Profile]]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 version = "1.11.0"
 
 [[deps.ProgressMeter]]
@@ -1386,6 +1767,12 @@ version = "0.6.21"
     LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[[deps.StructTypes]]
+deps = ["Dates", "UUIDs"]
+git-tree-sha1 = "159331b30e94d7b11379037feeb9b690950cace8"
+uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+version = "1.11.0"
 
 [[deps.StyledStrings]]
 uuid = "f489334b-da3d-4c2e-b8f0-e476e12c162b"
@@ -1787,9 +2174,27 @@ version = "1.8.1+0"
 
 # ╔═╡ Cell order:
 # ╟─a6148830-0424-4d85-af87-9efa87eaa4aa
+# ╟─b2805e6f-a669-433f-9352-0a1f97fc2a52
 # ╟─45572d31-300f-4e40-a755-9c099c58551a
 # ╟─ed6a2919-8df2-4907-b7cb-93e4cf4c0500
-# ╟─79c52675-eedc-4426-9243-7e3f4945b508
+# ╟─7bc65c80-3346-452e-b4de-e45ce3a19461
+# ╟─fcc354c2-c077-4a5a-9b84-db1d5f9f4ee7
+# ╟─9d275485-9e6f-450e-8392-787ba3cda9a6
+# ╟─a889687a-ec1d-400d-901d-894e81fb5549
+# ╟─98d3cb65-7c5e-49d7-89df-5b32452a7067
+# ╟─80e8de21-61e6-4e8f-869c-a364eb07f42d
+# ╟─f26b7a51-3583-42da-8022-76a7aa6fec5a
+# ╟─660817e9-5a67-4eca-9722-d18e57bc5868
+# ╟─d46a3b04-cc28-4bda-90df-e95778f9bfa2
+# ╟─4b3aef5d-7009-4db1-bd29-04acf3bbaea3
+# ╟─ed268a43-ac57-49a0-992e-8e9c16cc1d28
+# ╟─6250662f-9589-47d4-80f6-be17341180f4
+# ╟─4c8505f9-7a53-4673-b1c2-26a82daf419d
+# ╟─91fed789-5722-4fbe-bb8f-98f44cd86a47
+# ╟─2010bad9-f0b6-41f9-9467-0b9e89daabaa
+# ╟─c96c98c9-787d-4b06-a5e1-a3874b255938
+# ╠═9e538d00-9783-436c-87f9-e0b9187cf5ba
+# ╠═239e31ef-0016-4361-a132-04b7120f75fd
 # ╟─fe06cac9-c8d8-40fa-a5b3-b32ba17c8e9d
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
