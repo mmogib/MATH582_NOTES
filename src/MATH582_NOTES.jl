@@ -27,6 +27,9 @@ begin
 	# using IntervalArithmetic
 end
 
+# ╔═╡ a0a41512-efe8-4848-ae7d-16e1606d0978
+TableOfContents(title="📚 MATH582: Nonlinear Programming", indent=true, depth=4)
+
 # ╔═╡ a6148830-0424-4d85-af87-9efa87eaa4aa
 md"# Course Website"
 
@@ -169,11 +172,23 @@ let
 	scatter!(pts[:,1], pts[:,2], ms=3, color=:black, label="points")
 end
 
-# ╔═╡ 239e31ef-0016-4361-a132-04b7120f75fd
+# ╔═╡ cbf0cb8d-0fc4-4886-87b4-a7da72210ed4
+md"""
+## 2.2 Closure and Interior of a Set
+"""
 
+# ╔═╡ 46f49abf-eb7c-47cf-8e27-eecaad8a2cab
+cm"""
+**Learning Objectives**
+> 1. Define neighborhoods in ``\mathbb{R}^n``.
+> 2. Define closure via neighborhoods; define closed sets by ``S = \operatorname{cl}(S)``.
+> 3. Derive the **sequential definition** of closed sets as a result.
+> 4. Recognize compact sets and basic consequences.
+> 5. State and apply **Theorem 2.2.2** (with ``S`` convex) and its corollaries.
+"""
 
-# ╔═╡ fe06cac9-c8d8-40fa-a5b3-b32ba17c8e9d
-TableOfContents(title="📚 MATH582: Nonlinear Programming", indent=true, depth=4)
+# ╔═╡ ca2c639a-a8c5-4c31-9732-fa3bdc284347
+
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -471,6 +486,105 @@ $(bbl("Examples",""))
 cm"""
 $(bbl("Julia demo — computing a 2D convex hull (Polyhedra.jl)"))
 This demo builds a convex hull from random points and plots the hull polygon.
+"""
+
+# ╔═╡ fa1dec30-f740-46da-b2b3-628ea1527b5f
+cm"""
+$(define("Core Concepts"))
+
+__Neighborhoods__
+
+For ``x \in \mathbb{R}^n`` and ``\epsilon>0``, the **``\epsilon``-neighborhood** of ``x`` is
+```math
+N_\epsilon(x) := \{ y \in \mathbb{R}^n : \|y-x\| < \epsilon \}.
+```
+We use the Euclidean norm unless stated otherwise.
+
+__Closure, Closed Sets, Interior, Boundary (Neighborhood-based)__
+
+**Closure.** For ``S \subseteq \mathbb{R}^n``,
+```math
+\operatorname{cl}(S) := \{ x \in \mathbb{R}^n : N_\epsilon(x) \cap S \neq \varnothing \ \text{for all } \epsilon>0 \}.
+```
+**Closed set.** 
+```math
+S \text{  is} \textbf{ closed } \text{ iff } S = \operatorname{cl}(S).
+```
+
+**Interior.**
+```math
+\operatorname{int}(S) := \{ x \in S : \exists\, \epsilon>0 \text{ with } N_\epsilon(x) \subseteq S \}.
+```
+
+**Boundary.**
+```math
+\partial S := \operatorname{cl}(S) \setminus \operatorname{int}(S).
+```
+"""
+
+# ╔═╡ 74c85703-9286-4e8b-aea2-5265987f09dd
+cm"""
+$(bth("Sequential characterization of closed sets"))
+** A set ``S \subseteq \mathbb{R}^n`` is closed **iff** for every sequence ``{x^k} \subseteq S`` with ``x^k \to x``, one has ``x \in S``.
+$(ebl())
+
+*Sketch.* If ``S`` is closed and ``x^k \to x``, then for any ``\epsilon>0`` we have ``x^k \in N_\epsilon(x)`` for all large ``k``, and since ``x^k \in S``, the neighborhood definition of ``\operatorname{cl}(S)`` gives ``x \in S``. Conversely, if every convergent sequence in ``S`` has its limit in ``S``, then every limit point belongs to ``S``, hence ``S=\operatorname{cl}(S)``.
+"""
+
+# ╔═╡ ce80ae3e-1759-462d-bcc8-568c15bd166d
+cm"""
+$(define("Compact Sets"))
+In ``\mathbb{R}^n``, a set ``S`` is **compact** iff it is **closed and bounded** (Heine–Borel). 
+"""
+
+# ╔═╡ 90de87f6-3707-45c6-a6a9-3cc9d4debe64
+cm"""
+$(ex("Examples",""))
+- Interval ``[0,1]``: ``\operatorname{cl}([0,1])=[0,1]``, ``\operatorname{int}([0,1])=(0,1)``, ``\partial[0,1]=\{0,1\}``.
+- Open ball ``B(0,1)``: ``\operatorname{int}(B)=B``, ``\operatorname{cl}(B)=\overline{B(0,1)}``, ``\partial B`` is the unit sphere.
+- Half-space ``\{x: a^\top x \le b\}``: closed, not compact (unless bounded additionally).
+- Rationals ``\mathbb{Q} \subset \mathbb{R}``: ``\operatorname{cl}(\mathbb{Q})=\mathbb{R}``, ``\operatorname{int}(\mathbb{Q})=\varnothing``.
+"""
+
+# ╔═╡ 5aa374d0-8191-40aa-a06c-d1e115d07b1d
+cm"""
+$(bth("Line Segment Property for Convex ``S``"))
+Let ``S \subseteq \mathbb{R}^n`` is **convex**. If ``x \in \operatorname{cl}(S)`` and ``y \in \operatorname{int}(S)``, then the open line segment
+```math
+(x,y] := \{ \lambda x + (1-\lambda) y : 0 < \lambda \le 1 \}
+```
+is contained in ``\operatorname{int}(S)``.
+$(ebl())
+
+**Sketch of proof.** Since ``y \in \operatorname{int}(S)``, there exists ``\epsilon>0`` with ``N_\epsilon(y) \subseteq S``. For any ``0<\lambda\le 1``, the map ``z \mapsto \lambda x + (1-\lambda) z`` sends the ball ``N_\epsilon(y)`` to ``N_{(1-\lambda)\epsilon}(\lambda x + (1-\lambda) y)``, which lies in ``S`` by convexity. Hence each point on ``(x,y]`` has a neighborhood contained in ``S``, i.e., lies in ``\operatorname{int}(S)``.
+"""
+
+# ╔═╡ 4f44ea9c-f6de-42a2-88b2-a3c772f3e80d
+cm"""
+$(bbl("Corollaries",""))
+
+1. Let ``S`` be a convex set. Then int ``S`` is convex. 
+2. Let ``S`` be a convex set with a nonempty interior (``\operatorname{int}(S) \neq \varnothing``). Then ``\operatorname{cl}(S)`` is convex if .
+3. Let ``S`` be a convex set with a nonempty interior (``\operatorname{int}(S) \neq \varnothing``). Then ``\operatorname{cl}(\operatorname{int}(S)) = \operatorname{cl}(S)``.
+4. Let S be a convex set with a nonempty interior (``\operatorname{int}(S) \neq \varnothing``). Then ``\operatorname{int}(\operatorname{cl}(S)) = \operatorname{int}(S)``.
+"""
+
+# ╔═╡ 3cc11287-aba8-4e86-a7ef-2172d9c73fb4
+cm"""
+$(ex("Example","Analytical Worked Example"))
+
+**Claim.** The hypercube ``[0,1]^n`` is compact.
+
+*Proof.* ``[0,1]^n`` is closed as a finite product of closed intervals and bounded; by Heine–Borel it is compact. Alternatively, every sequence in ``[0,1]^n`` has a convergent subsequence (Bolzano–Weierstrass) whose limit lies in ``[0,1]^n``.
+"""
+
+# ╔═╡ 6f306138-3d90-47ef-bd46-58ea33ecfcb8
+cm"""
+$(bbl("Exercises",""))
+
+1. Prove: If ``S`` is convex and ``\operatorname{int}(S) \neq \varnothing``, then ``\operatorname{int}(S)`` is dense in ``S`` iff ``\operatorname{cl}(\operatorname{int}(S))=\operatorname{cl}(S)``.
+2. Give an example of a bounded, non-closed set in ``\mathbb{R}^2`` and compute its ``\operatorname{cl}``, ``\operatorname{int}``, ``\partial``.
+3. True/False (justify): Every closed set in ``\mathbb{R}^n`` is compact.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2173,6 +2287,7 @@ version = "1.8.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─a0a41512-efe8-4848-ae7d-16e1606d0978
 # ╟─a6148830-0424-4d85-af87-9efa87eaa4aa
 # ╟─b2805e6f-a669-433f-9352-0a1f97fc2a52
 # ╟─45572d31-300f-4e40-a755-9c099c58551a
@@ -2194,8 +2309,17 @@ version = "1.8.1+0"
 # ╟─2010bad9-f0b6-41f9-9467-0b9e89daabaa
 # ╟─c96c98c9-787d-4b06-a5e1-a3874b255938
 # ╠═9e538d00-9783-436c-87f9-e0b9187cf5ba
-# ╠═239e31ef-0016-4361-a132-04b7120f75fd
-# ╟─fe06cac9-c8d8-40fa-a5b3-b32ba17c8e9d
+# ╟─cbf0cb8d-0fc4-4886-87b4-a7da72210ed4
+# ╟─46f49abf-eb7c-47cf-8e27-eecaad8a2cab
+# ╟─fa1dec30-f740-46da-b2b3-628ea1527b5f
+# ╟─74c85703-9286-4e8b-aea2-5265987f09dd
+# ╟─ce80ae3e-1759-462d-bcc8-568c15bd166d
+# ╟─90de87f6-3707-45c6-a6a9-3cc9d4debe64
+# ╟─5aa374d0-8191-40aa-a06c-d1e115d07b1d
+# ╟─4f44ea9c-f6de-42a2-88b2-a3c772f3e80d
+# ╟─3cc11287-aba8-4e86-a7ef-2172d9c73fb4
+# ╠═ca2c639a-a8c5-4c31-9732-fa3bdc284347
+# ╟─6f306138-3d90-47ef-bd46-58ea33ecfcb8
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
