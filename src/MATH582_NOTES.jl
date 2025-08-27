@@ -190,6 +190,62 @@ cm"""
 # ╔═╡ ca2c639a-a8c5-4c31-9732-fa3bdc284347
 
 
+# ╔═╡ 6bf7f29f-8c9b-46eb-ad4d-244336a02e73
+md"## 2.3 Weierstrass’s Theorem"
+
+
+# ╔═╡ 6a6d3f65-6cd4-4672-a007-98c92fbcb76d
+
+cm"""
+__Learning Objectives__
+> By the end of this lecture, students should be able to:
+> 1. **State and explain** Weierstrass’s Theorem for existence of solutions in optimization.
+> 2. **Differentiate** between minimum, maximum, infimum, and supremum.
+> 3. **Illustrate** cases where a minimum does not exist despite boundedness of the objective.
+> 4. **Apply** Weierstrass’s Theorem to prove existence of solutions to nonlinear programs.
+> 5. **Experiment** computationally with bounded and unbounded sets in Julia.
+"""
+
+# ╔═╡ 8e2102e2-5dee-4198-8326-3c83b8d07cf2
+let
+	f(x) = x^2
+	plot(f, 0, 1, label="f(x) = x^2", linewidth=2)
+	scatter!([0], [0], color=:red, label="Minimum at x=0", frame_style=:origin)
+	
+end
+
+# ╔═╡ 818c7aac-3310-468c-b0c0-388bca923064
+cm"""
+__Computational Counterexample__
+Consider ``f(x) = 1/x`` on ``S = (0,1]``.
+- ``f`` is continuous on ``(0,1]``, but ``S`` is **not closed**.
+- ``\inf f(x) = 1``, but there is **no minimizer**, since ``x=0 ∉ S``.
+"""
+
+# ╔═╡ 59d6f09b-2132-4437-a69f-4a51172ef6ff
+let
+	f2(x) = 1/x
+	plot(f2, 0.001, 1, label="f(x) = 1/x", linewidth=2, ylims=(0,10), frame_style=:origin)
+end
+
+# ╔═╡ 13369f35-e62d-4f84-830d-58999af481a8
+cm"""
+__Formative Check__
+1. Define infimum and supremum in your own words.
+2. Give an example of a function on a non-compact domain where no minimum exists.
+3. State Weierstrass’s Theorem formally.
+4. Why is compactness essential in the theorem?
+5. Suppose ``f(x) = e^x`` on ``[0,∞)``. Does a minimizer exist? Why or why not?
+"""
+
+# ╔═╡ 7958b6c5-f805-41ee-b290-c01abc51547f
+cm"""
+__Reading__
+- **Main Textbook:** Bazaraa–Sherali–Shetty (2006), *Nonlinear Programming: Theory and Algorithms*, 3rd ed., Section 2.3, pp. 48–49.
+- **Supplementary:** Rockafellar, *Convex Analysis*, Ch. 2 (for background on compactness and lower semicontinuity).
+
+"""
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -585,6 +641,47 @@ $(bbl("Exercises",""))
 1. Prove: If ``S`` is convex and ``\operatorname{int}(S) \neq \varnothing``, then ``\operatorname{int}(S)`` is dense in ``S`` iff ``\operatorname{cl}(\operatorname{int}(S))=\operatorname{cl}(S)``.
 2. Give an example of a bounded, non-closed set in ``\mathbb{R}^2`` and compute its ``\operatorname{cl}``, ``\operatorname{int}``, ``\partial``.
 3. True/False (justify): Every closed set in ``\mathbb{R}^n`` is compact.
+"""
+
+# ╔═╡ 2346835d-5fc8-4716-833d-0b8d54dc6cd4
+cm"""
+$(define(""))
+- A **minimizing solution** ``x^*``
+```math 
+x^* ∈ S \text{ satisfies } f(x^*) ≤ f(x) \text{ for all } x ∈ S.
+```
+- The **infimum** 
+```math 
+\inf_{x ∈ S} f(x)\text{ is the greatest lower bound of } f \text{ over }S.
+```
+- The **supremum** 
+```math
+\sup_{x ∈ S} f(x)\text{ is the least upper bound of }f\text{ over }S.
+```
+- Existence of infimum/supremum does not guarantee existence of a minimizer/maximizer.
+$(ebl())
+
+$(bth("Weierstrass’s Theorem"))
+ Let ``S`` be a nonempty, compact set, and let ``f : S → ℝ`` be continuous on ``S``. Then the problem
+ ```math
+ \min_{x ∈ S} f(x)
+ ```
+ attains its minimum; that is, there exists ``x^* ∈ S`` such that ``f(x^*) = \min_{x ∈ S} f(x)``.
+
+**Interpretation:** Continuity + compactness (closed and bounded) guarantees that a minimizer exists.
+"""
+
+# ╔═╡ 3cefbf49-7946-4978-802c-9c46ff83835e
+cm"""
+$(ex("","Analytical Example"))
+Consider the problem:
+```math
+\min_{x ∈ [0,1]} f(x) = x^2
+```
+- ``S = [0,1]`` is compact.
+- ``f(x) = x^2`` is continuous.
+- By Weierstrass, a minimizer exists.
+- Direct evaluation: ``f(0) = 0`` is the minimum.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2320,6 +2417,15 @@ version = "1.8.1+0"
 # ╟─3cc11287-aba8-4e86-a7ef-2172d9c73fb4
 # ╠═ca2c639a-a8c5-4c31-9732-fa3bdc284347
 # ╟─6f306138-3d90-47ef-bd46-58ea33ecfcb8
+# ╟─6bf7f29f-8c9b-46eb-ad4d-244336a02e73
+# ╟─6a6d3f65-6cd4-4672-a007-98c92fbcb76d
+# ╟─2346835d-5fc8-4716-833d-0b8d54dc6cd4
+# ╟─3cefbf49-7946-4978-802c-9c46ff83835e
+# ╟─8e2102e2-5dee-4198-8326-3c83b8d07cf2
+# ╟─818c7aac-3310-468c-b0c0-388bca923064
+# ╠═59d6f09b-2132-4437-a69f-4a51172ef6ff
+# ╟─13369f35-e62d-4f84-830d-58999af481a8
+# ╠═7958b6c5-f805-41ee-b290-c01abc51547f
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
