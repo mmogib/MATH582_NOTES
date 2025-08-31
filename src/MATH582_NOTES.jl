@@ -246,6 +246,34 @@ __Reading__
 
 """
 
+# ╔═╡ 41a713fd-1e21-4034-9b77-34db9a67a8e6
+md"## 2.4 Separation and Support of Sets "
+
+# ╔═╡ dc4a1115-b3e0-45d7-ad83-9debf9e55e60
+cm"""
+__Learning outcomes__
+
+> 1. Understand the concept of separating hyperplanes in convex analysis.
+> 2. Derive and prove the separation theorems for convex sets.
+> 3. Apply the notion of support functions and supporting hyperplanes.
+> 4. Use separation results to motivate duality and optimality conditions in nonlinear programming.
+"""
+
+# ╔═╡ e721d5be-313a-4df9-b37e-e560c9bcaa97
+md"### Hyperplanes and Separation of Two Sets "
+
+# ╔═╡ 7559a2b5-9a9e-43db-9605-e2262f0a5c83
+cm"P"
+
+# ╔═╡ cc560f5c-ee2e-42a3-b0c5-b2f7e5460a74
+cm"P"
+
+# ╔═╡ 23d1eb38-8aaf-4c91-b6a6-f7eb508b88dd
+md"## Support of Sets at Boundary Points"
+
+# ╔═╡ 702156d9-521c-47ee-9965-3059684a5a8d
+md"### Separation of Two Convex Sets "
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -605,9 +633,9 @@ $(ex("Examples",""))
 # ╔═╡ 5aa374d0-8191-40aa-a06c-d1e115d07b1d
 cm"""
 $(bth("Line Segment Property for Convex ``S``"))
-Let ``S \subseteq \mathbb{R}^n`` is **convex**. If ``x \in \operatorname{cl}(S)`` and ``y \in \operatorname{int}(S)``, then the open line segment
+Let ``S \subseteq \mathbb{R}^n`` is **convex**. If ``x_1 \in \operatorname{cl}(S)`` and ``x_2 \in \operatorname{int}(S)``, then the open line segment
 ```math
-(x,y] := \{ \lambda x + (1-\lambda) y : 0 < \lambda \le 1 \}
+(x_1,x_2] := \{ \lambda x_1 + (1-\lambda) x_2 : 0 < \lambda \le 1 \}
 ```
 is contained in ``\operatorname{int}(S)``.
 $(ebl())
@@ -648,7 +676,7 @@ cm"""
 $(define(""))
 - A **minimizing solution** ``x^*``
 ```math 
-x^* ∈ S \text{ satisfies } f(x^*) ≤ f(x) \text{ for all } x ∈ S.
+x^* ∈ S \text{ satisfies } f(x^*) ≤ f(x) \text{ for all } x ∈ S. (f(x^*)=\min f(x))
 ```
 - The **infimum** 
 ```math 
@@ -683,6 +711,353 @@ Consider the problem:
 - By Weierstrass, a minimizer exists.
 - Direct evaluation: ``f(0) = 0`` is the minimum.
 """
+
+# ╔═╡ fb465e6a-2a6d-4ba3-9624-19acc0cb236c
+cm"""
+$(bbl("Parallelogram Law",""))
+
+---
+
+For any ``a, b \in \mathbb{R}^n``, the parallelogram law states
+```math
+\|a+b\|_2^2 + \|a-b\|_2^2 = 2\|a\|_2^2 + 2\|b\|_2^2.
+```
+
+This identity characterizes the Euclidean norm among all norms.
+"""
+
+# ╔═╡ 5b4a35bb-89a9-46bb-910a-790af826a6d3
+cm"""
+$(bth("Theorem 2.4.1 (Minimum Distance to a Closed Convex Set)"))
+
+Let ``S \subset \mathbb{R}^n`` be a nonempty **closed convex** set and let ``y \in \mathbb{R}^n``. Then there exists a **unique** point ``\bar{x} \in S`` such that
+```math
+\|y-\bar{x}\| = \inf_{x \in S} \|y-x\|.
+```
+Moreover, ``\bar{x}`` satisfies the **obtuse-angle condition**
+```math
+(y-\bar{x})^{\top}(x-\bar{x}) \le 0, \quad \forall\, x \in S,
+```
+and hence ``S`` lies in the half-space
+```math
+(y-\bar{x})^{\top}(x-\bar{x}) \le 0
+```
+relative to the hyperplane
+```math
+(y-\bar{x})^{\top}(x-\bar{x}) = 0
+```
+passing through ``\bar{x}`` with normal ``a = y-\bar{x}``.
+
+$(ebl())
+"""
+
+# ╔═╡ 13796a55-9f61-4aea-9349-f4c3498ec209
+cm"""
+$(ex("Example", "Equation of a Hyperplane in R^4"))
+
+Consider the hyperplane
+```math
+H = \{ (x_1, x_2, x_3, x_4) : x_1 + x_2 - x_3 + 2x_4 = 4 \}.
+```
+The normal vector is
+```math
+p = (1, 1, -1, 2)^T.
+```
+
+Alternatively, the hyperplane can be written in reference to any point in ``H``. For example, take
+```math
+\bar{x} = (0, 6, 0, -1)^T \in H.
+```
+Then we can write
+```math
+H = \{ (x_1, x_2, x_3, x_4) : x_1 + (x_2 - 6) - x_3 + 2(x_4 + 1) = 0 \}.
+```
+"""
+
+
+# ╔═╡ 7b542f58-3b2b-4bf5-8183-2ac3588fe464
+cm"""
+$(define("Separating Hyperplane"))
+
+A **hyperplane** ``H`` in ``\mathbb{R}^n`` is a collection of points of the form
+```math
+H = \{ x \in \mathbb{R}^n : p^{\top}x = \alpha \},
+```
+where ``p`` is a nonzero vector in ``\mathbb{R}^n`` and ``\alpha`` is a scalar. The vector ``p`` is called the **normal vector** of the hyperplane.
+
+A hyperplane ``H`` defines two **closed half-spaces**
+```math
+H^+ = \{ x : p^{\top}x \geq \alpha \}, \quad H^- = \{ x : p^{\top}x \leq \alpha \},
+```
+and two **open half-spaces**
+```math
+\{ x : p^{\top}x > \alpha \}, \quad \{ x : p^{\top}x < \alpha \}.
+```
+
+Let ``S_1`` and ``S_2`` be nonempty sets in ``\mathbb{R}^n``. Then:
+
+- ``H`` is said to **separate** ``S_1`` and ``S_2`` if
+```math
+p^{\top}x \geq \alpha \quad \forall x \in S_1, \\
+p^{\top}x \leq \alpha \quad \forall x \in S_2.
+```
+- If, in addition, ``S_1 \cup S_2 \not\subset H``, then ``H`` is said to **properly separate** ``S_1`` and ``S_2``.
+- ``H`` is said to **strictly separate** ``S_1`` and ``S_2`` if
+```math
+p^{\top}x > \alpha \quad \forall x \in S_1, \\
+p^{\top}x < \alpha \quad \forall x \in S_2.
+```
+- ``H`` is said to **strongly separate** ``S_1`` and ``S_2`` if there exists ``\varepsilon > 0`` such that
+```math
+p^{\top}x \geq \alpha + \varepsilon \quad \forall x \in S_1, \\
+p^{\top}x \leq \alpha \quad \forall x \in S_2.
+```
+"""
+
+
+# ╔═╡ 43d02e39-037d-445f-9f8e-96866c34e858
+cm"""
+__Various types of separation.__
+$(post_img("https://www.dropbox.com/scl/fi/5hij066cg197299a7b6ib/fig2.9.png?rlkey=b0uy09hylqlsasrtmby0ry9u9&dl=1"))
+"""
+
+# ╔═╡ 68aa1d60-0777-4066-9037-3513a705d3f3
+cm"""
+$(bth("2.4.4 (Separation of a Convex Set and a Point)"))
+
+Let ``S`` be a nonempty closed convex set in ``\mathbb{R}^n`` and ``y \notin S``. Then there exists a nonzero vector ``p`` and a scalar ``\alpha`` such that
+```math
+p^{\top} y > \alpha, \quad p^{\top} x \leq \alpha \quad \forall x \in S.
+```
+
+$(ebl())
+"""
+
+
+# ╔═╡ cfc46ffc-5b02-4b61-bfec-9c313a8d60c4
+cm"""
+$(bbl("Corollary 1",""))
+
+Let ``S`` be a closed convex set in ``\mathbb{R}^n``. Then ``S`` is the intersection of all half-spaces containing ``S``.
+$(ebl())
+
+$(bbl("Corollary 2",""))
+
+Let ``S`` be a nonempty set, and let ``y \notin \operatorname{cl} \operatorname{conv}(S)``, the closure of the convex hull of ``S``. Then there exists a strongly separating hyperplane for ``S`` and ``y``.
+"""
+
+
+# ╔═╡ ea540681-5897-4745-bd43-f1671bbe2d94
+cm"""
+$(bbl("Remark",""))
+
+The conclusion of Theorem 2.4.4 is equivalent to the following statements:
+
+1. There exists a hyperplane that **strictly** separates ``S`` and ``y``.
+2. There exists a hyperplane that **strongly** separates ``S`` and ``y``.
+3. There exists a vector ``p`` such that ``p^{\top}y > \sup\{p^{\top}x : x \in S\}``.
+4. There exists a vector ``p`` such that ``p^{\top}y < \inf\{p^{\top}x : x \in S\}``.
+"""
+
+
+# ╔═╡ a8cf2766-7784-421c-8a2c-d2fcb26a7344
+cm"""
+$(bth("2.4.5 (Farkas's Theorem)"))
+
+Let ``A`` be an ``m \times n`` matrix and ``c`` be an ``n``-vector. Then exactly one of the following two systems has a solution:
+
+**System 1:**
+```math
+Ax \leq 0, \quad c^{\top}x > 0 \quad \text{for some } x \in \mathbb{R}^n.
+```
+
+**System 2:**
+```math
+A^{\top}y = c, \quad y \geq 0 \quad \text{for some } y \in \mathbb{R}^m.
+```
+
+$(ebl())
+"""
+
+
+# ╔═╡ 97af3754-7d2c-4db1-8124-c78cacaa4d3f
+cm"""
+__Farkas's Theorem__
+$(post_img("https://www.dropbox.com/scl/fi/s6srf62hlewmc9q6xenz0/fig2.10.png?rlkey=wns7uqrm9x7essqxbbst4bo5l&dl=1"))
+"""
+
+# ╔═╡ 7ba2f271-9064-4f72-b51c-3834a3deec56
+cm"""
+$(bbl("Corollary 1 (Gordan's Theorem)",""))
+
+Let ``A`` be an ``m \times n`` matrix. Then exactly one of the following two systems has a solution:
+
+**System 1:**
+```math
+Ax < 0 \quad \text{for some } x \in \mathbb{R}^n.
+```
+
+**System 2:**
+```math
+A^{\top}y = 0, \quad y \geq 0 \quad \text{for some nonzero } y \in \mathbb{R}^m.
+```
+
+$(bbl("Corollary 2",""))
+
+Let ``A`` be an ``m \times n`` matrix and ``c`` be an ``n``-vector. Then exactly one of the following two systems has a solution:
+
+**System 1:**
+```math
+Ax \leq 0, \; x \geq 0, \; c^{\top}x > 0 \quad \text{for some } x \in \mathbb{R}^n.
+```
+
+**System 2:**
+```math
+A^{\top}y \geq c, \; y \geq 0 \quad \text{for some } y \in \mathbb{R}^m.
+```
+
+$(bbl("Corollary 3",""))
+
+Let ``A`` be an ``m \times n`` matrix, ``B`` be an ``\ell \times n`` matrix, and ``c`` be an ``n``-vector. Then exactly one of the following two systems has a solution:
+
+**System 1:**
+```math
+Ax \leq 0, \; Bx = 0, \; c^{\top}x > 0 \quad \text{for some } x \in \mathbb{R}^n.
+```
+
+**System 2:**
+```math
+A^{\top}y + B^{\top}z = c, \; y \geq 0 \quad \text{for some } y \in \mathbb{R}^m, z \in \mathbb{R}^{\ell}.
+```
+"""
+
+
+# ╔═╡ adb20e86-d93b-4b4f-89a9-1005af9df039
+cm"""
+$(define("Supporting Hyperplane"))
+
+Let ``S`` be a nonempty set in ``\mathbb{R}^n``, and let ``\bar{x} \in \partial S``. A hyperplane
+```math
+H = \{ x : p^{\top}(x - \bar{x}) = 0 \}
+```
+is called a **supporting hyperplane** of ``S`` at ``\bar{x}`` if either 
+```math
+S \subseteq H^+, \text{ that is, } \qquad p^{\top}(x - \bar{x}) \geq 0 \quad \forall x \in S,
+```
+or else 
+```math
+S \subseteq H^-, \text{ that is, } \qquad p^{\top}(x - \bar{x}) \leq 0 \quad \forall x \in S.
+```
+
+If, in addition, ``S \not\subset H``, then ``H`` is called a **proper supporting hyperplane** of ``S`` at ``\bar{x}``.
+"""
+
+
+# ╔═╡ 0fffa7d0-74af-4d71-bc18-dd64baf1eb13
+cm"""
+__Supporting hyperplanes.__
+$(post_img("https://www.dropbox.com/scl/fi/1ixb2sca0368s79yvijes/fig2.11.png?rlkey=21yb2gv1apvavyhotnmq5eogq&dl=1"))
+
+$(post_img("https://www.dropbox.com/scl/fi/2cd8mt4trcy0iv42hk3co/fig2.11_2.png?rlkey=d7zbg3lvn2k97b2rerpfj8nz5&dl=1", 300))
+"""
+
+# ╔═╡ 887631f8-c063-44eb-a795-be849ed6b284
+cm"""
+$(bth("2.4.7"))
+
+Let ``S`` be a nonempty convex set in ``\mathbb{R}^n``, and let ``\bar{x} \in \partial S``. Then there exists a hyperplane that supports ``S`` at ``\bar{x}``; that is, there exists a nonzero vector ``p`` such that
+```math
+p^{\top}(x - \bar{x}) \leq 0 \quad \forall x \in \operatorname{cl} S.
+```
+
+$(ebl())
+"""
+
+
+# ╔═╡ a4dcf88f-3df2-4971-a130-c575623d7bc0
+cm"""
+$(bbl("Corollary",""))
+
+- **(1)** Let ``S`` be a nonempty convex set in ``\mathbb{R}^n`` and let ``\bar{x} \notin \operatorname{int} S``. Then there exists a nonzero vector ``p`` such that
+```math
+p^{\top}(x - \bar{x}) \leq 0 \quad \forall x \in \operatorname{cl} S.
+```
+
+- **(2)** Let ``S`` be a nonempty set in ``\mathbb{R}^n``, and let ``y \notin \operatorname{int} \operatorname{conv}(S)``. Then there exists a hyperplane that separates ``S`` and ``y``.
+
+- **(3)** Let ``S`` be a nonempty set in ``\mathbb{R}^n``, and let ``\bar{x} \in \partial S \cap \partial \operatorname{conv}(S)``. Then there exists a hyperplane that supports ``S`` at ``\bar{x}``.
+"""
+
+
+# ╔═╡ 98c2e6e3-5669-49a8-ab90-ed787f738700
+cm"""
+$(bth("2.4.8"))
+
+Let ``S_1`` and ``S_2`` be nonempty convex sets in ``\mathbb{R}^n`` and suppose that ``S_1 \cap S_2 = \emptyset``. Then there exists a hyperplane that separates ``S_1`` and ``S_2``; that is, there exists a nonzero vector ``p`` in ``\mathbb{R}^n`` such that
+```math
+\inf\{p^{\top}x : x \in S_1\} \geq \sup\{p^{\top}x : x \in S_2\}.
+```
+
+$(ebl())
+"""
+
+
+# ╔═╡ 17dfacb3-49e6-471b-843a-b3fad927cb26
+cm"""$(post_img("https://www.dropbox.com/scl/fi/rph7asup0ip9583fxdnw7/fig_th_2.4.8.png?rlkey=6hjt4s3z97wpvbgy451dmflox&dl=1", 300))"""
+
+# ╔═╡ 1a7107ab-143c-4dc5-bb1b-ec4493915682
+cm"""
+$(bbl("Corollary 1",""))
+
+Let ``S_1`` and ``S_2`` be nonempty convex sets in ``\mathbb{R}^n``. Suppose that ``\operatorname{int} S_2`` is not empty and that ``S_1 \cap \operatorname{int} S_2 = \emptyset``. Then there exists a hyperplane that separates ``S_1`` and ``S_2``; that is, there exists a nonzero ``p`` such that
+```math
+\inf\{p^{\top}x : x \in S_1\} \geq \sup\{p^{\top}x : x \in S_2\}.
+```
+"""
+
+
+# ╔═╡ df3497ce-8187-4f19-8351-c3cab6fc3e04
+cm"""
+$(bbl("Corollary 2",""))
+
+Let ``S_1`` and ``S_2`` be nonempty sets in ``\mathbb{R}^n`` such that ``\operatorname{int}(\operatorname{conv}(S_i)) \neq \emptyset`` for ``i=1,2``, but
+```math
+\operatorname{int}(\operatorname{conv}(S_1)) \cap \operatorname{int}(\operatorname{conv}(S_2)) = \emptyset.
+```
+Then there exists a hyperplane that separates ``S_1`` and ``S_2``.
+"""
+
+
+# ╔═╡ 55ee2a12-4187-40c0-b832-89de362cca82
+cm"""
+$(bth("2.4.10 (Strong Separation)"))
+
+Let ``S_1`` and ``S_2`` be closed convex sets, and suppose that ``S_1`` is bounded. If ``S_1 \cap S_2 = \emptyset``, then there exists a hyperplane that strongly separates ``S_1`` and ``S_2``; that is, there exists a nonzero vector ``p`` and ``\varepsilon > 0`` such that
+```math
+\inf\{p^{\top}x : x \in S_1\} \geq \varepsilon + \sup\{p^{\top}x : x \in S_2\}.
+```
+
+$(ebl())
+"""
+
+
+# ╔═╡ be931167-e339-4392-9245-145a8aa6df53
+cm"""
+__Nonexistence of a strongly separating hyperplane.__
+$(post_img("https://www.dropbox.com/scl/fi/93jwy5c99ic9y0db39l5b/fig2.13.png?rlkey=aivrz6xrrpwaitw555jw3h84n&dl=1"))
+"""
+
+# ╔═╡ ff77a554-3b51-4592-98dd-a7a7b12efcaa
+cm"""
+$(bbl("Corollary 1",""))
+
+Let ``S_1`` and ``S_2`` be nonempty sets in ``\mathbb{R}^n``, and suppose that ``S_1`` is bounded. If
+```math
+\operatorname{cl}(\operatorname{conv}(S_1)) \cap \operatorname{cl}(\operatorname{conv}(S_2)) = \emptyset,
+```
+then there exists a hyperplane that strongly separates ``S_1`` and ``S_2``.
+"""
+
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2423,9 +2798,38 @@ version = "1.8.1+0"
 # ╟─3cefbf49-7946-4978-802c-9c46ff83835e
 # ╟─8e2102e2-5dee-4198-8326-3c83b8d07cf2
 # ╟─818c7aac-3310-468c-b0c0-388bca923064
-# ╠═59d6f09b-2132-4437-a69f-4a51172ef6ff
+# ╟─59d6f09b-2132-4437-a69f-4a51172ef6ff
 # ╟─13369f35-e62d-4f84-830d-58999af481a8
-# ╠═7958b6c5-f805-41ee-b290-c01abc51547f
+# ╟─7958b6c5-f805-41ee-b290-c01abc51547f
+# ╟─41a713fd-1e21-4034-9b77-34db9a67a8e6
+# ╟─dc4a1115-b3e0-45d7-ad83-9debf9e55e60
+# ╟─fb465e6a-2a6d-4ba3-9624-19acc0cb236c
+# ╟─5b4a35bb-89a9-46bb-910a-790af826a6d3
+# ╟─13796a55-9f61-4aea-9349-f4c3498ec209
+# ╟─e721d5be-313a-4df9-b37e-e560c9bcaa97
+# ╟─7b542f58-3b2b-4bf5-8183-2ac3588fe464
+# ╟─43d02e39-037d-445f-9f8e-96866c34e858
+# ╟─68aa1d60-0777-4066-9037-3513a705d3f3
+# ╟─7559a2b5-9a9e-43db-9605-e2262f0a5c83
+# ╟─cfc46ffc-5b02-4b61-bfec-9c313a8d60c4
+# ╟─ea540681-5897-4745-bd43-f1671bbe2d94
+# ╟─a8cf2766-7784-421c-8a2c-d2fcb26a7344
+# ╟─cc560f5c-ee2e-42a3-b0c5-b2f7e5460a74
+# ╟─97af3754-7d2c-4db1-8124-c78cacaa4d3f
+# ╟─7ba2f271-9064-4f72-b51c-3834a3deec56
+# ╟─23d1eb38-8aaf-4c91-b6a6-f7eb508b88dd
+# ╟─adb20e86-d93b-4b4f-89a9-1005af9df039
+# ╟─0fffa7d0-74af-4d71-bc18-dd64baf1eb13
+# ╟─887631f8-c063-44eb-a795-be849ed6b284
+# ╟─a4dcf88f-3df2-4971-a130-c575623d7bc0
+# ╟─702156d9-521c-47ee-9965-3059684a5a8d
+# ╟─98c2e6e3-5669-49a8-ab90-ed787f738700
+# ╟─17dfacb3-49e6-471b-843a-b3fad927cb26
+# ╟─1a7107ab-143c-4dc5-bb1b-ec4493915682
+# ╟─df3497ce-8187-4f19-8351-c3cab6fc3e04
+# ╟─55ee2a12-4187-40c0-b832-89de362cca82
+# ╟─be931167-e339-4392-9245-145a8aa6df53
+# ╟─ff77a554-3b51-4592-98dd-a7a7b12efcaa
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
