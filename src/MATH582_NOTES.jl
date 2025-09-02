@@ -255,8 +255,6 @@ __Learning outcomes__
 
 > 1. Understand the concept of separating hyperplanes in convex analysis.
 > 2. Derive and prove the separation theorems for convex sets.
-> 3. Apply the notion of support functions and supporting hyperplanes.
-> 4. Use separation results to motivate duality and optimality conditions in nonlinear programming.
 """
 
 # ╔═╡ e721d5be-313a-4df9-b37e-e560c9bcaa97
@@ -265,11 +263,60 @@ md"### Hyperplanes and Separation of Two Sets "
 # ╔═╡ 7559a2b5-9a9e-43db-9605-e2262f0a5c83
 cm"P"
 
+# ╔═╡ 9034672d-b285-4e44-b472-63f5d1876477
+# let
+# 	# θ values
+# 	θ = range(0, 2π, length=500)
+	
+# 	# parametric circle (center (1,1), radius 1)
+# 	x = 1 .+ cos.(θ)
+# 	y = 1 .+ sin.(θ)
+	
+# 	# fill the circle
+# 	plot(x, y, 
+# 		 xlimits = (-4,2),
+# 		 ylimits = (-2,5),
+# 		 frame_style = :origin,
+# 		 seriestype=:shape, c=:blue, alpha=0.3, label="")
+	
+# 	# outline
+# 	plot!(x, y, color=:blue, linewidth=2, label="")
+	
+# 	# formatting
+# 	plot!(aspect_ratio=:equal, xlabel="x", ylabel="y",
+# 	      title="Circle centered at (1,1), radius 1", grid=true)
+# 	plot!(-10:10,x->-x)
+# 	quiver!([0.0], [0.0], quiver=([-4.0], [1.0]), color=:red, linewidth=2, label="y = [-4,1]")
+# end
+
+# ╔═╡ 357b4c18-6b9d-407b-b46a-e470f61e1bf4
+# let
+# 	p1 = -[1;1]
+# 	p2 = [1;1]
+# 	y = [-8, -1]
+	
+# 	# parameter values
+# 	t = range(0, 2π, length=10)
+	
+# 	# circle points
+# 	points = [ [1 + cos(tt), 1 + sin(tt)] for tt in t ]
+	
+# 	p1y, spx = p1 ⋅ y, map(x->p1 ⋅ x, points) |> maximum
+# 	p2y, ipx = p2 ⋅ y, map(x->p2 ⋅ x, points) |> minimum
+# 	cm"""
+# 	``p^Ty=``$p1y ``\qquad \sup \{p^Tx: x
+# 	\in S\}=`` $spx
+
+# 	``p^Ty=``$p2y ``\qquad \inf \{p^Tx: x
+# 	\in S\}=`` $ipx
+# 	"""
+# end
+
 # ╔═╡ cc560f5c-ee2e-42a3-b0c5-b2f7e5460a74
 cm"P"
 
 # ╔═╡ 23d1eb38-8aaf-4c91-b6a6-f7eb508b88dd
-md"## Support of Sets at Boundary Points"
+md"### Support of Sets at Boundary Points"
 
 # ╔═╡ 702156d9-521c-47ee-9965-3059684a5a8d
 md"### Separation of Two Convex Sets "
@@ -2813,6 +2860,8 @@ version = "1.8.1+0"
 # ╟─7559a2b5-9a9e-43db-9605-e2262f0a5c83
 # ╟─cfc46ffc-5b02-4b61-bfec-9c313a8d60c4
 # ╟─ea540681-5897-4745-bd43-f1671bbe2d94
+# ╟─9034672d-b285-4e44-b472-63f5d1876477
+# ╟─357b4c18-6b9d-407b-b46a-e470f61e1bf4
 # ╟─a8cf2766-7784-421c-8a2c-d2fcb26a7344
 # ╟─cc560f5c-ee2e-42a3-b0c5-b2f7e5460a74
 # ╟─97af3754-7d2c-4db1-8124-c78cacaa4d3f
