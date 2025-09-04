@@ -321,6 +321,30 @@ md"### Support of Sets at Boundary Points"
 # ╔═╡ 702156d9-521c-47ee-9965-3059684a5a8d
 md"### Separation of Two Convex Sets "
 
+# ╔═╡ b7858895-5fb6-4d58-9ff4-b51f55db32ca
+md"## 2.5 Convex Cones and Polarity"
+
+# ╔═╡ 5bdaef6d-410f-4421-b2cf-e113cb40fe5c
+cm"""
+__Learning outcomes__
+
+> 1. Understand the concept of convex cones and their basic properties.
+> 2. Define and explore the polarity of convex cones.
+> 3. Apply polarity in the analysis of convex optimization problems.
+"""
+
+# ╔═╡ cc6206a9-e2b1-4f31-9d5c-368e5e20ba58
+md"## 2.6 Polyhedral Sets, Extreme Points, and Extreme Directions"
+
+# ╔═╡ 8e354fee-c8c6-4fa4-a6a8-f13e5e1c1ab2
+cm"""
+__Learning outcomes__
+
+> 1. Understand the definition and structure of polyhedral sets.
+> 2. Define and identify extreme points and extreme directions.
+> 3. Characterize polyhedral sets in terms of their extreme points and directions.
+"""
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -1105,6 +1129,228 @@ Let ``S_1`` and ``S_2`` be nonempty sets in ``\mathbb{R}^n``, and suppose that `
 then there exists a hyperplane that strongly separates ``S_1`` and ``S_2``.
 """
 
+
+# ╔═╡ 2dbd94c1-6303-4453-930e-4caee827ea02
+cm"""
+$(define("Convex Cone"))
+
+A set ``\emptyset\ne C \subseteq \mathbb{R}^n`` is called a **cone** if for every ``x \in C`` and every scalar ``\alpha \geq 0``, we have ``\alpha x \in C``.  
+
+A cone ``C`` is called a **convex cone** if it is also convex, i.e., if for all ``x, y \in C`` and ``\lambda_1, \lambda_2 \geq 0``:  
+```math
+\lambda_1 x + \lambda_2 y \in C.
+```
+"""
+
+# ╔═╡ af6e8b0b-efe3-4168-b2ea-035c08969ba8
+cm"""
+$(define("Polar Cone"))
+
+
+Let ``S`` be a nonempty set in ``\mathbb{R}^n``. The **polar cone** of ``S``, denoted by ``S^*``, is defined as
+```math
+S^* = \{ p : p^T x \leq 0, \; \forall x \in S \}.
+```
+If ``S`` is empty, then ``S^*`` is interpreted as ``\mathbb{R}^n``.
+"""
+
+# ╔═╡ 5f1d27f3-3808-4c00-850f-7f2da641e03e
+cm"""
+$(bbl("Lemma", "2.5.3"))
+
+Let ``S, S_1, S_2`` be nonempty sets in ``\mathbb{R}^n``. Then the following statements hold true:
+
+1. ``S^*`` is a closed convex cone.  
+2. ``S \subseteq S^{**}``, where ``S^{**}`` is the polar cone of ``S^*``.
+3. ``S_1 \subseteq S_2``, implies that ``S_1^* \subseteq S_1^{*}``.
+"""
+
+
+# ╔═╡ 9b459391-83c7-47a0-a414-92f934da112c
+cm"""
+$(bth("Theorem 2.5.4"))
+
+Let ``C`` be a nonempty closed convex cone. Then  
+```math
+C = C^{**}.
+```
+"""
+
+# ╔═╡ 0d19c555-5d0b-46c4-a765-748094298d75
+cm"""
+$(bbl("Remark","Farkas's Theorem as a Consequence of Theorem 2.5.4"))
+
+Let ``A`` be an ``m \times n`` matrix, and let  
+```math
+C = \{ A^t y : y \geq 0 \}.
+```
+Note that ``C`` is a closed convex cone. It can be verified that  
+```math
+C^* = \{ x : A x \leq 0 \}.
+```
+By Theorem 2.5.4, ``c \in C^{**}`` if and only if ``c \in C``. But ``c \in C^{**}`` means that whenever ``x \in C^*``, we have  
+```math
+c^t x \leq 0.
+```
+Equivalently, ``A x \leq 0`` implies ``c^t x \leq 0``. By the definition of ``C``, ``c \in C`` means that  
+```math
+c = A^t y, \quad y \geq 0.
+```
+Thus, the result ``C = C^{**}`` can be stated as follows:
+
+_System 1:_  
+```math
+A x \leq 0 \; \Rightarrow \; c^t x \leq 0.
+```
+
+_System 2:_  
+```math
+A^t y = c, \quad y \geq 0.
+```
+
+System 1 is consistent if and only if System 2 has a solution ``y``.
+
+This statement can be put in the more usual and equivalent form of Farkas’s theorem. Exactly one of the following two systems has a solution:
+
+
+_System 1:_
+```math
+A x \leq 0, \; c^t x > 0 \quad (i.e., \; c \notin C^{**} = C).
+```
+
+
+_System 2:_
+```math
+A^t y = c, \; y \geq 0 \quad (i.e., \; c \in C).
+```
+"""
+
+# ╔═╡ 6c72b325-3abc-4ede-aff5-2f5bf192649d
+cm"""
+$(define("Polyhedral Set"))
+
+A set ``S`` in ``\mathbb{R}^n`` is called a **polyhedral set** if it is the intersection of a finite number of closed half-spaces:
+```math
+S = \{ x : p_i^T x \leq \alpha_i, \; i=1,\ldots,m \},
+```
+where ``p_i`` is a nonzero vector and ``\alpha_i`` is a scalar.
+
+Examples:
+```math
+S = \{ x : A x \leq b \},
+```
+```math
+S = \{ x : A x = b, x \geq 0 \},
+```
+```math
+S = \{ x : A x \geq b, x \geq 0 \}.
+```
+"""
+
+# ╔═╡ e8cbb8c4-f137-453d-8e8e-87199c79a562
+cm"""
+$(ex("Example","Polyhedral Set in R2"))
+
+Consider the polyhedral set
+```math
+S = \{ (x_1, x_2) : -x_1 + x_2 \leq 2, \; x_2 \leq 4, \; x_1 \geq 0, \; x_2 \geq 0 \}.
+```
+
+The feasible region is a polygon in the ``(x_1,x_2)``-plane. Its extreme points are located at the intersections of the boundary lines and are illustrated below.
+"""
+
+# ╔═╡ 6a62cb74-f9bc-465f-9cdc-9381232b5b3c
+cm"""
+$(define("Extreme Point"))
+
+Let ``S`` be a nonempty convex set in ``\mathbb{R}^n``. A vector ``x \in S`` is called an **extreme point** of ``S`` if whenever ``x = \lambda x_1 + (1-\lambda) x_2`` with ``x_1, x_2 \in S`` and ``\lambda \in (0,1)``, then ``x = x_1 = x_2``.
+
+Examples:
+1. ``S = \{ (x_1,x_2): x_1^2 + x_2^2 \leq 1 \}`` → extreme points are on the boundary circle.
+2. ``S = \{ (x_1,x_2): x_1 + x_2 \leq 2, -x_1 + 2x_2 \leq 2, x_1, x_2 \geq 0 \}`` → extreme points are the vertices.
+3. Polytopes have finitely many extreme points.
+"""
+
+# ╔═╡ c102db9c-b4f3-4398-a055-c0b024a46446
+cm"""
+$(define("Extreme Direction"))
+
+Let ``S`` be a nonempty, closed convex set in ``\mathbb{R}^n``. A nonzero vector ``d`` is called a **direction**,  or a __recession direction__,  of ``S`` if for each ``x \in S``, ``x + \lambda d \in S`` for all ``\lambda \geq 0``.
+
+It is called an **extreme direction** if it cannot be written as a positive combination of two distinct directions.
+"""
+
+# ╔═╡ 95183221-8558-470b-aa94-1a40359c2562
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/lcgbda4vbf9eug8z8hwgk/fig2.18.png?rlkey=12u0h5bj1u1hw3pdgbiv3dv41&dl=1"))
+"""
+
+# ╔═╡ a9601a07-00a8-4a5c-a1eb-060b47a98912
+cm"""
+$(bth("Characterization of Extreme Points"))
+
+Let ``S = \{ x : A x = b, x \geq 0 \}``, where ``A`` has rank ``m``. Then ``x`` is an extreme point of ``S`` if and only if ``A`` can be decomposed into ``[B,N]`` such that
+```math
+x = \begin{bmatrix} x_B \\ x_N \end{bmatrix} = \begin{bmatrix} B^{-1} b \\ 0 \end{bmatrix}, \quad B^{-1} b \geq 0.
+```
+Such a solution is called a **basic feasible solution (BFS)**.
+"""
+
+# ╔═╡ 3225e74a-4f0e-4cdd-a687-b3cad3349823
+cm"""
+$(bbl("Corollary","Finiteness of Extreme Points"))
+
+The number of extreme points of ``S`` is finite and less than or equal to
+```math
+\binom{n}{m} = \frac{n!}{m!(n-m)!}.
+```
+"""
+
+# ╔═╡ 9bd6deb3-425b-451b-9ec1-43ca55b51445
+cm"""
+$(bth("Existence of Extreme Points"))
+
+If ``S = \{ x : A x = b, x \geq 0 \}`` is nonempty, then ``S`` has at least one extreme point.
+"""
+
+# ╔═╡ 965ab318-1528-4d9e-a586-e7ea4382ac57
+cm"""
+$(bth("Characterization of Extreme Directions"))
+
+Let ``S = \{ x : A x = b, x \geq 0 \} \neq \emptyset``. A vector ``\bar{d}`` is an extreme direction of ``S`` if and only if ``A`` can be decomposed into ``[B, N]`` such that ``B^{-1} a_j \leq 0`` for some column ``a_j`` of ``N`` and ``\bar{d}`` is a positive multiple of
+```math
+d = \begin{bmatrix} -B^{-1} a_j \\ e_j \end{bmatrix},
+```
+where ``e_j`` is an  ``n - m`` unit vector.
+"""
+
+# ╔═╡ 64cedf28-216b-4b03-924b-c07c11b33a51
+cm"""
+$(bbl("Corollary",""))
+The number of extreme directions of ``S`` is finite.
+"""
+
+# ╔═╡ c38ad4af-2245-4482-900e-7691577bcff2
+cm"""
+$(bth("Representation Theorem"))
+
+Let ``S`` be a nonempty polyhedral set ``S = \{ x : A x = b, x \geq 0 \}``. Let ``x_1, \ldots, x_k`` be the extreme points and ``d_1, \ldots, d_\ell`` be the extreme directions. Then ``x \in S`` if and only if
+```math
+x = \sum_{j=1}^k \lambda_j x_j + \sum_{j=1}^\ell \mu_j d_j,
+```
+with
+```math
+\sum_{j=1}^k \lambda_j = 1, \quad \lambda_j \geq 0, \; \mu_j \geq 0.
+```
+This gives the inner representation of ``S``.
+"""
+
+# ╔═╡ 78422f45-8847-45a9-a269-3f0ee5918076
+cm"""
+$(bbl("Corollary","Existence of Extreme Directions"))
+
+A nonempty polyhedral set ``S = \{ x : A x = b, x \geq 0 \}`` has at least one extreme direction if and only if it is unbounded.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2864,7 +3110,7 @@ version = "1.8.1+0"
 # ╟─357b4c18-6b9d-407b-b46a-e470f61e1bf4
 # ╟─a8cf2766-7784-421c-8a2c-d2fcb26a7344
 # ╟─cc560f5c-ee2e-42a3-b0c5-b2f7e5460a74
-# ╟─97af3754-7d2c-4db1-8124-c78cacaa4d3f
+# ╠═97af3754-7d2c-4db1-8124-c78cacaa4d3f
 # ╟─7ba2f271-9064-4f72-b51c-3834a3deec56
 # ╟─23d1eb38-8aaf-4c91-b6a6-f7eb508b88dd
 # ╟─adb20e86-d93b-4b4f-89a9-1005af9df039
@@ -2879,6 +3125,27 @@ version = "1.8.1+0"
 # ╟─55ee2a12-4187-40c0-b832-89de362cca82
 # ╟─be931167-e339-4392-9245-145a8aa6df53
 # ╟─ff77a554-3b51-4592-98dd-a7a7b12efcaa
+# ╟─b7858895-5fb6-4d58-9ff4-b51f55db32ca
+# ╟─5bdaef6d-410f-4421-b2cf-e113cb40fe5c
+# ╟─2dbd94c1-6303-4453-930e-4caee827ea02
+# ╟─af6e8b0b-efe3-4168-b2ea-035c08969ba8
+# ╟─5f1d27f3-3808-4c00-850f-7f2da641e03e
+# ╟─9b459391-83c7-47a0-a414-92f934da112c
+# ╟─0d19c555-5d0b-46c4-a765-748094298d75
+# ╟─cc6206a9-e2b1-4f31-9d5c-368e5e20ba58
+# ╟─8e354fee-c8c6-4fa4-a6a8-f13e5e1c1ab2
+# ╟─6c72b325-3abc-4ede-aff5-2f5bf192649d
+# ╟─e8cbb8c4-f137-453d-8e8e-87199c79a562
+# ╟─6a62cb74-f9bc-465f-9cdc-9381232b5b3c
+# ╟─c102db9c-b4f3-4398-a055-c0b024a46446
+# ╟─95183221-8558-470b-aa94-1a40359c2562
+# ╟─a9601a07-00a8-4a5c-a1eb-060b47a98912
+# ╟─3225e74a-4f0e-4cdd-a687-b3cad3349823
+# ╟─9bd6deb3-425b-451b-9ec1-43ca55b51445
+# ╟─965ab318-1528-4d9e-a586-e7ea4382ac57
+# ╟─64cedf28-216b-4b03-924b-c07c11b33a51
+# ╟─c38ad4af-2245-4482-900e-7691577bcff2
+# ╟─78422f45-8847-45a9-a269-3f0ee5918076
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
