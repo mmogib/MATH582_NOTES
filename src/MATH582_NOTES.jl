@@ -345,6 +345,15 @@ __Learning outcomes__
 > 3. Characterize polyhedral sets in terms of their extreme points and directions.
 """
 
+# ╔═╡ 3a82aafe-3d11-4743-bcfc-0eb2061b94c2
+md"# Chapter 3: Convex Functions and Generalizations"
+
+# ╔═╡ 683c53d5-7db0-49ee-b2c7-e0b87248fdd4
+md"## Continuity of Convex Functions "
+
+# ╔═╡ 71bb4d0e-8000-44ee-96c9-a356ab2afe3d
+md"## Directional Derivative of Convex Functions "
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -1162,7 +1171,7 @@ Let ``S, S_1, S_2`` be nonempty sets in ``\mathbb{R}^n``. Then the following sta
 
 1. ``S^*`` is a closed convex cone.  
 2. ``S \subseteq S^{**}``, where ``S^{**}`` is the polar cone of ``S^*``.
-3. ``S_1 \subseteq S_2``, implies that ``S_1^* \subseteq S_1^{*}``.
+3. ``S_1 \subseteq S_2``, implies that ``S_2^* \subseteq S_1^{*}``.
 """
 
 
@@ -1350,6 +1359,118 @@ cm"""
 $(bbl("Corollary","Existence of Extreme Directions"))
 
 A nonempty polyhedral set ``S = \{ x : A x = b, x \geq 0 \}`` has at least one extreme direction if and only if it is unbounded.
+"""
+
+# ╔═╡ 69c4460b-93f7-440e-98c0-9dd9c66eb8fb
+cm"""
+$(define("Convex and Concave Functions"))
+
+Let ``f : S \to \mathbb{R}``, where ``S`` is a nonempty convex set in ``\mathbb{R}^n``.  
+- The function ``f`` is said to be **convex** on ``S`` if
+
+```math
+f(\lambda x_1 + (1 - \lambda)x_2) \leq \lambda f(x_1) + (1 - \lambda) f(x_2)
+```
+
+$(add_space(15))for each ``x_1, x_2 \in S`` and for each ``\lambda \in (0,1)``.
+
+- The function ``f`` is called **strictly convex** on ``S`` if the above inequality is true as a **strict inequality** for each distinct ``x_1`` and ``x_2`` in ``S`` and for each ``\lambda \in (0,1)``.
+
+- The function ``f : S \to \mathbb{R}`` is called **concave** (resp. **strictly concave**) on ``S`` if ``-f`` is convex (resp. strictly convex) on ``S``.
+"""
+
+
+# ╔═╡ 9120ebc6-f004-40e5-a2bb-69f5c7b6f74b
+cm"""
+$(bbl("Remarks", ""))
+1. Let ``f_1, f_2, \ldots, f_k : \mathbb{R}^n \to \mathbb{R}`` be convex functions. Then:
+
+   (a) ``f(x) = \sum_{j=1}^k \alpha_j f_j(x)``, where ``\alpha_j > 0`` for ``j = 1,2,\ldots,k``, is a convex function (see Exercise 3.8).
+
+   (b) ``f(x) = \max \{ f_1(x), f_2(x), \ldots, f_k(x) \}`` is a convex function (see Exercise 3.9).
+
+2. Suppose that ``g : \mathbb{R}^n \to \mathbb{R}`` is a concave function. Let ``S = \{ x : g(x) > 0 \}``, and define ``f : S \to \mathbb{R}`` as ``f(x) = 1 / g(x)``. Then ``f`` is convex over ``S`` (see Exercise 3.11).
+
+3. Let ``g : \mathbb{R} \to \mathbb{R}`` be a nondecreasing, univariate, convex function, and let ``h : \mathbb{R}^n \to \mathbb{R}`` be a convex function. Then the composite function ``f : \mathbb{R}^n \to \mathbb{R}`` defined as ``f(x) = g[h(x)]`` is a convex function (see Exercise 3.10).
+
+4. Let ``g : \mathbb{R}^m \to \mathbb{R}`` be a convex function, and let ``h : \mathbb{R}^n \to \mathbb{R}^m`` be an affine function of the form ``h(x) = A x + b``, where ``A`` is an ``m \times n`` matrix and ``b`` is an ``m \times 1`` vector. Then the composite function ``f : \mathbb{R}^n \to \mathbb{R}`` defined as ``f(x) = g[h(x)]`` is a convex function (see Exercise 3.16).
+
+"""
+
+
+# ╔═╡ c6bd9fa2-e9e8-4bb3-a866-1b450d3bf8d8
+cm"""
+$(define("Level Set"))
+
+Let ``f``  be a convex function. The set  
+
+```math
+S_\alpha = \{ x \in S : f(x) \leq \alpha \}, \quad \alpha \in \mathbb{R},
+```  
+is called  a **level set**. Sometimes this set is called a **lower-level set**, to differentiate it from the **upper-level set**  
+
+```math
+\{ x \in S : f(x) \geq \alpha \}.
+```
+"""
+
+
+# ╔═╡ e949636a-b55d-4ae3-b605-26ad244a5be2
+cm"""
+$(bbl("Lemma", "Convexity of Level Sets"))
+
+Let ``S`` be a nonempty convex set in ``\mathbb{R}^n``, and let ``f : S \to \mathbb{R}`` be a convex function.  
+Then the level set  
+
+```math
+S_\alpha = \{ x \in S : f(x) \leq \alpha \}, \quad \alpha \in \mathbb{R},
+```
+
+"""
+
+# ╔═╡ 248cef95-c012-446c-8e4d-258fb8f06410
+cm"""
+$(bth("3.1.3"))
+
+Let ``S`` be a nonempty convex set in ``\mathbb{R}^n``, and let ``f: S \to \mathbb{R}`` be convex. Then ``f`` is continuous on the interior of ``S``.
+"""
+
+
+# ╔═╡ 5617b3db-ed53-4c81-b7a5-073c8f34fd9f
+cm"""
+$(bbl("Remark",""))
+
+- Discontinuity only are allowed at the boundary of ``S``, as illustrated by the following convex function defined on ``S = \{ x : -1 \leq x \leq 1 \}``:
+
+```math
+f(x) =
+\begin{cases}
+x^2 & \text{for } |x| < 1, \\
+2   & \text{for } |x| = 1.
+\end{cases}
+```
+"""
+
+# ╔═╡ 0d650b2c-6ec8-4822-b875-43a6a5b52879
+cm"""
+$(define("Directional Derivative "))
+
+Let ``S`` be a nonempty set in ``\mathbb{R}^n``, and let ``f: S \to \mathbb{R}``. Let ``\bar{x} \in S`` and ``d`` be a nonzero vector such that ``\bar{x} + \lambda d \in S`` for ``\lambda > 0`` and sufficiently small.  
+
+The **directional derivative** of ``f`` at ``\bar{x}`` along the vector ``d``, denoted by ``f'(\bar{x}; d)``, is given by the following limit if it exists:
+
+```math
+f'(\bar{x}; d) = \lim_{\lambda \to 0^+} \frac{f(\bar{x} + \lambda d) - f(\bar{x})}{\lambda}.
+```
+"""
+
+
+# ╔═╡ 6e464ce7-f3d2-43dd-b529-a6171e9dd898
+cm"""
+$(bbl("Lemma",""))
+
+Let ``f: \mathbb{R}^n \to \mathbb{R}`` be a convex function.  Consider any point ``\bar{x} \in \mathbb{R}^n`` and a nonzero direction ``d \in \mathbb{R}^n``.  
+Then the directional derivative ``f'(\bar{x}; d)`` of ``f`` at ``\bar{x}`` in the direction ``d`` __exists__.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -3146,6 +3267,17 @@ version = "1.8.1+0"
 # ╟─64cedf28-216b-4b03-924b-c07c11b33a51
 # ╟─c38ad4af-2245-4482-900e-7691577bcff2
 # ╟─78422f45-8847-45a9-a269-3f0ee5918076
+# ╟─3a82aafe-3d11-4743-bcfc-0eb2061b94c2
+# ╟─69c4460b-93f7-440e-98c0-9dd9c66eb8fb
+# ╟─9120ebc6-f004-40e5-a2bb-69f5c7b6f74b
+# ╟─c6bd9fa2-e9e8-4bb3-a866-1b450d3bf8d8
+# ╟─e949636a-b55d-4ae3-b605-26ad244a5be2
+# ╟─683c53d5-7db0-49ee-b2c7-e0b87248fdd4
+# ╟─248cef95-c012-446c-8e4d-258fb8f06410
+# ╟─5617b3db-ed53-4c81-b7a5-073c8f34fd9f
+# ╟─71bb4d0e-8000-44ee-96c9-a356ab2afe3d
+# ╟─0d650b2c-6ec8-4822-b875-43a6a5b52879
+# ╠═6e464ce7-f3d2-43dd-b529-a6171e9dd898
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
