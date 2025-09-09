@@ -348,11 +348,20 @@ __Learning outcomes__
 # ╔═╡ 3a82aafe-3d11-4743-bcfc-0eb2061b94c2
 md"# Chapter 3: Convex Functions and Generalizations"
 
+# ╔═╡ a5eea233-4510-4b7b-b7dd-51650c4a9300
+md"## 3.1 Definitions and Basic Properties "
+
 # ╔═╡ 683c53d5-7db0-49ee-b2c7-e0b87248fdd4
-md"## Continuity of Convex Functions "
+md"### Continuity of Convex Functions "
 
 # ╔═╡ 71bb4d0e-8000-44ee-96c9-a356ab2afe3d
-md"## Directional Derivative of Convex Functions "
+md"### Directional Derivative of Convex Functions "
+
+# ╔═╡ cd0a647d-eeac-4798-99e0-a10549033f48
+md"## 3.2 Subgradients of Convex Functions"
+
+# ╔═╡ 2f340ca4-9fe2-4910-bec3-9fb86c7ed6a7
+md"### Epigraph and Hypograph of a Function "
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -1471,6 +1480,78 @@ $(bbl("Lemma",""))
 
 Let ``f: \mathbb{R}^n \to \mathbb{R}`` be a convex function.  Consider any point ``\bar{x} \in \mathbb{R}^n`` and a nonzero direction ``d \in \mathbb{R}^n``.  
 Then the directional derivative ``f'(\bar{x}; d)`` of ``f`` at ``\bar{x}`` in the direction ``d`` __exists__.
+"""
+
+# ╔═╡ ae88db5b-7923-4216-98af-570d1ecf39dc
+cm"""
+$(define("Epigraph"))
+Let ``S`` be a nonempty set in ``R^n``, and let ``f: S \rightarrow R``. The epigraph of ``f``, denoted by epi ``f``, is a subset of ``R^{n+1}`` defined by
+```math
+\{(\mathbf{x}, y): \mathbf{x} \in S, y \in R, y \geq f(\mathbf{x})\}
+```
+
+The hypograph of ``f``, denoted by hyp ``f``, is a subset of ``R^{n+1}`` defined by
+```math
+\{(\mathbf{x}, y): \mathbf{x} \in S, y \in R, y \leq f(\mathbf{x})\}
+```
+"""
+
+# ╔═╡ 525e28ee-6af9-4e5b-9ce1-1f87881ff681
+cm"""
+$(bth("3.2.2"))
+
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R``. Then ``f`` is convex if and only if epi ``f`` is a convex set.
+"""
+
+# ╔═╡ 69aecb16-725a-49dd-aba4-9775d797aaae
+cm"""
+$(define("Subgradients"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R`` be convex. Then ``\xi`` is called a subgradient of ``f`` at ``\overline{\mathbf{x}} \in S`` if
+```math
+f(\mathbf{x}) \geq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for all } \mathbf{x} \in S
+```
+
+Similarly, let ``f: S \rightarrow R`` be concave. Then ``\xi`` is called a subgradient of ``f`` at ``\overline{\mathbf{x}} \in S`` if
+```math
+f(\mathbf{x}) \leq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for all } \mathbf{x} \in S
+```
+$(ebl())
+$(bbl("Remarks",""))
+The collection of subgradients of ``f`` at ``\overline{\mathbf{x}}`` (known as the subdifferential of ``f`` at ``\overline{\mathbf{x}}`` ) is a convex set.
+"""
+
+# ╔═╡ 017ac677-b8d3-40a9-90c3-ec7d4c463f0f
+cm"""
+$(bth("3.2.5"))
+
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R`` be convex. Then for ``\overline{\mathbf{x}} \in`` int ``S``, there exists a vector ``\xi`` such that the hyperplane
+```math
+H=\left\{(\mathbf{x}, y): y=f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}})\right\}
+```
+supports epi ``f`` at ``[\overline{\mathbf{x}}, f(\overline{\mathbf{x}})]``. In particular,
+```math
+f(\mathbf{x}) \geq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for each } \mathbf{x} \in S ;
+```
+that is, ``\boldsymbol{\xi}`` is a subgradient of ``f`` at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ 44c72d9b-0adc-49e7-a878-184951cefe0d
+cm"""
+$(bbl("Corollary",""))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R`` be strictly convex. Then for ``\overline{\mathbf{x}} \in \operatorname{int} S`` there exists a vector ``\xi`` such that
+```math
+f(\mathbf{x})>f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for all } \mathbf{x} \in S, \mathbf{x} \neq \overline{\mathbf{x}} .
+```
+"""
+
+# ╔═╡ 3c14bb03-4fff-47d0-8fc8-643561950b2a
+cm"""
+$(bth("3.2.6"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R``. Suppose that for each point ``\overline{\mathbf{x}} \in`` int ``S`` there exists a subgradient vector ``\xi`` such that
+```math
+f(\mathbf{x}) \geq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad\text{ for each } \mathbf{x} \in S.
+```
+Then, ``f`` is convex on ``\operatorname{int} S``.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -3268,6 +3349,7 @@ version = "1.8.1+0"
 # ╟─c38ad4af-2245-4482-900e-7691577bcff2
 # ╟─78422f45-8847-45a9-a269-3f0ee5918076
 # ╟─3a82aafe-3d11-4743-bcfc-0eb2061b94c2
+# ╟─a5eea233-4510-4b7b-b7dd-51650c4a9300
 # ╟─69c4460b-93f7-440e-98c0-9dd9c66eb8fb
 # ╟─9120ebc6-f004-40e5-a2bb-69f5c7b6f74b
 # ╟─c6bd9fa2-e9e8-4bb3-a866-1b450d3bf8d8
@@ -3277,7 +3359,15 @@ version = "1.8.1+0"
 # ╟─5617b3db-ed53-4c81-b7a5-073c8f34fd9f
 # ╟─71bb4d0e-8000-44ee-96c9-a356ab2afe3d
 # ╟─0d650b2c-6ec8-4822-b875-43a6a5b52879
-# ╠═6e464ce7-f3d2-43dd-b529-a6171e9dd898
+# ╟─6e464ce7-f3d2-43dd-b529-a6171e9dd898
+# ╟─cd0a647d-eeac-4798-99e0-a10549033f48
+# ╟─2f340ca4-9fe2-4910-bec3-9fb86c7ed6a7
+# ╟─ae88db5b-7923-4216-98af-570d1ecf39dc
+# ╟─525e28ee-6af9-4e5b-9ce1-1f87881ff681
+# ╟─69aecb16-725a-49dd-aba4-9775d797aaae
+# ╟─017ac677-b8d3-40a9-90c3-ec7d4c463f0f
+# ╟─44c72d9b-0adc-49e7-a878-184951cefe0d
+# ╟─3c14bb03-4fff-47d0-8fc8-643561950b2a
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
