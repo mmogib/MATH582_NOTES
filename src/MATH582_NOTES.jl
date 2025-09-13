@@ -363,6 +363,28 @@ md"## 3.2 Subgradients of Convex Functions"
 # ╔═╡ 2f340ca4-9fe2-4910-bec3-9fb86c7ed6a7
 md"### Epigraph and Hypograph of a Function "
 
+# ╔═╡ 788874c6-a13f-4718-86d5-bdbba1b588c8
+md"## 3.3 Differentiable Convex Functions "
+
+# ╔═╡ af8c90dd-3f32-40ed-91d1-1287919109c4
+md"### Twice Differentiable Convex and Concave Functions "
+
+# ╔═╡ b2cbaa21-30b7-4eaa-bbba-2a100b4e3f7f
+let
+	H = [2 1 2
+			1 2 3
+		 2 3 4
+		]
+# 	map(i->det(H[1:i,1:i]), 1:3)
+
+# 	M = [
+#     -2  -1   0;
+#     -1  -3  -1;
+#      0  -1  -2
+# ]
+# 	map(i->det(M[1:i,1:i]), 1:3)
+end
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -377,6 +399,14 @@ end
 # ╔═╡ fc877247-39bc-4bb0-8bda-1466fcb00798
 @htl("""<style>
 @import url("https://mmogib.github.io/math102/custom.css");
+ul {
+  list-style: disc; /* or whatever default you prefer: disc, circle, square */
+  padding-left: 40px; /* adjust spacing */
+}
+
+ul li:before {
+  content: none; /* removes the custom emoji */
+}
 </style>""")
 
 # ╔═╡ fdd3c3e3-5089-456f-adef-7ab2e311331f
@@ -1434,6 +1464,7 @@ Then the level set
 ```math
 S_\alpha = \{ x \in S : f(x) \leq \alpha \}, \quad \alpha \in \mathbb{R},
 ```
+is convex.
 
 """
 
@@ -1517,7 +1548,11 @@ f(\mathbf{x}) \leq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x
 ```
 $(ebl())
 $(bbl("Remarks",""))
-The collection of subgradients of ``f`` at ``\overline{\mathbf{x}}`` (known as the subdifferential of ``f`` at ``\overline{\mathbf{x}}`` ) is a convex set.
+The collection of subgradients of ``f`` at ``\overline{\mathbf{x}}`` (known as the subdifferential of ``f`` at ``\overline{\mathbf{x}}`` ) is a convex set. 
+We will denote this set by 
+```math
+\partial f(\overline{\mathbf{x}})
+```
 """
 
 # ╔═╡ 017ac677-b8d3-40a9-90c3-ec7d4c463f0f
@@ -1552,6 +1587,148 @@ Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R``. S
 f(\mathbf{x}) \geq f(\overline{\mathbf{x}})+\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \quad\text{ for each } \mathbf{x} \in S.
 ```
 Then, ``f`` is convex on ``\operatorname{int} S``.
+"""
+
+# ╔═╡ 657034bf-4034-4b37-995b-cc3e22a6ff19
+cm"""
+$(define("Differentiable Function"))
+Let ``S`` be a nonempty set in ``R^n``, and let ``f: S \rightarrow R``. Then ``f`` is said to be differentiable at ``\overline{\mathbf{x}} \in \operatorname{int} S`` if there exist a vector ``\nabla f(\overline{\mathbf{x}})``, called the gradient vector, and a function ``\alpha: R^n \rightarrow R`` such that
+```math
+f(\mathbf{x})=f(\overline{\mathbf{x}})+\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}})+\|\mathbf{x}-\overline{\mathbf{x}}\| \alpha(\overline{\mathbf{x}} ; \mathbf{x}-\overline{\mathbf{x}}) \quad \text { for each } \mathbf{x} \in S
+```
+where ``\lim _{\mathbf{x} \rightarrow \overline{\mathbf{x}}} \alpha(\overline{\mathbf{x}} ; \mathbf{x}-\overline{\mathbf{x}})=0``. 
+
+- The function ``f`` is said to be differentiable on the open set ``S^{\prime} \subseteq S`` if it is differentiable at each point in ``S^{\prime}``. 
+- The representation of ``f`` above is called a first-order (Taylor series) expansion of ``f`` at (or about) the point ``\overline{\mathbf{x}}``; and without the implicitly defined remainder term involving the function ``\alpha``, the resulting representation is called a first-order (Taylor series) approximation of ``f`` at (or about) the point ``\overline{\mathbf{x}}``.
+$(ebl())
+
+"""
+
+# ╔═╡ f22887ef-aabb-4a52-9f38-afb2f82ed16b
+cm"""
+$(bbl("Lemma","3.3.2"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R`` be convex. Suppose that ``f`` is differentiable at ``\overline{\mathbf{x}} \in`` int ``S``. Then the collection of subgradients of ``f`` at ``\overline{\mathbf{x}}`` is the singleton set ``\{\nabla f(\overline{\mathbf{x}})\}``.
+"""
+
+# ╔═╡ 4a15eb36-dd71-4ad4-9512-6f189a448bb8
+cm"""
+$(bth("3.3.3"))
+
+Let ``S`` be a nonempty open convex set in ``R^n``, and let ``f: S \rightarrow R`` be differentiable on ``S``. Then ``f`` is convex if and only if for any ``\overline{\mathbf{x}} \in S``, we have
+```math
+f(\mathbf{x}) \geq f(\overline{\mathbf{x}})+\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for each } \mathbf{x} \in S
+```
+
+Similarly, ``f`` is strictly convex if and only if for each ``\overline{\mathbf{x}} \in S``, we have
+```math
+f(\mathbf{x})>f(\overline{\mathbf{x}})+\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \quad \text { for each } \mathbf{x} \neq \overline{\mathbf{x}} \text { in } S
+```
+"""
+
+# ╔═╡ de381e37-2c8e-4e42-a4b8-292cb349ed3d
+cm"""
+$(bth("3.3.4"))
+
+Let ``S`` be a nonempty open convex set in ``R^n`` and let ``f: S \rightarrow R`` be differentiable on ``S``. Then ``f`` is convex if and only if for each ``\mathbf{x}_1, \mathbf{x}_2 \in S`` we have
+```math
+\left[\nabla f\left(\mathbf{x}_2\right)-\nabla f\left(\mathbf{x}_1\right)\right]^t\left(\mathbf{x}_2-\mathbf{x}_1\right) \geq 0 .
+```
+
+Similarly, ``f`` is strictly convex if and only if, for each distinct ``\mathbf{x}_1, \mathbf{x}_2 \in S``, we have
+```math
+\left[\nabla f\left(\mathbf{x}_2\right)-\nabla f\left(\mathbf{x}_1\right)\right]^t\left(\mathbf{x}_2-\mathbf{x}_1\right)>0 .
+```
+"""
+
+# ╔═╡ 3e9400d7-48f7-4b1c-8bdf-441b874e99a7
+cm"""
+$(define("Twice Differentiability"))
+Let ``S`` be a nonempty set in ``R^n``, and let ``f: S \rightarrow R``. Then ``f`` is said to be twice differentiable at ``\overline{\mathbf{x}} \in \operatorname{int} S`` if there exist a vector ``\nabla f(\overline{\mathbf{x}})``, and an ``n \times n`` symmetric matrix ``\mathbf{H}(\overline{\mathbf{x}})``, called the Hessian matrix, and a function ``\alpha: R^n \rightarrow R`` such that
+```math
+f(\mathbf{x})=f(\overline{\mathbf{x}})+\nabla f(\mathbf{x})^t(\mathbf{x}-\overline{\mathbf{x}})+\frac{1}{2}(\mathbf{x}-\overline{\mathbf{x}})^t \mathbf{H}(\overline{\mathbf{x}})(\mathbf{x}-\overline{\mathbf{x}})+\|\mathbf{x}-\overline{\mathbf{x}}\|^2 \alpha(\overline{\mathbf{x}} ; \mathbf{x}-\overline{\mathbf{x}})
+```
+for each ``\mathbf{x} \in S``, where ``\lim _{\mathbf{x} \rightarrow \overline{\mathbf{x}}} \alpha(\overline{\mathbf{x}} ; \mathbf{x}-\overline{\mathbf{x}})=0``. 
+- The function ``f`` is said to be twice differentiable on the open set ``S^{\prime} \subseteq S`` if it is twice differentiable at each point in ``S^{\prime}``.
+"""
+
+# ╔═╡ c78f468a-75c8-41dc-896c-1021765adf83
+cm"""
+$(ex(1))
+Let ``f\left(x_1, x_2\right)=2 x_1+6 x_2-2 x_1^2-3 x_2^2+4 x_1 x_2``.
+"""
+
+# ╔═╡ 57d1b602-1b3f-4de6-85d3-ac158a01bcc8
+cm"""
+$(bth("3.3.7"))
+
+Let ``S`` be a nonempty open convex set in ``R^n``, and let ``f: S \rightarrow R`` be twice differentiable on ``S``. Then ``f`` is convex if and only if the Hessian matrix is __positive semidefinite__ at each point in ``S``.
+"""
+
+# ╔═╡ 20fdb0be-e603-4414-bb8e-d9df5b3d4666
+cm"""
+$(bth("3.3.8"))
+
+Let ``S`` be a nonempty open convex set in ``R^n``, and let ``f: S \rightarrow R`` be twice differentiable on ``S``. If the Hessian matrix is __positive definite__ at each point in ``S, f`` is strictly convex. Conversely, if ``f`` is strictly convex, the Hessian matrix is __positive semidefinite__ at each point in ``S``. However, if ``f`` is strictly convex and quadratic, its Hessian is positive definite.
+"""
+
+# ╔═╡ 1e87dde2-48a2-4158-b20a-af94fc2f3308
+cm"""
+$(bth("3.3.9 (R version)"))
+
+Let ``S`` be a nonempty open convex set in ``R``, and let ``f: S \rightarrow R`` be infinitely differentiable. Then ``f`` is strictly convex on ``S`` if and only if for each ``\bar{x} \in S``, there exists an even ``n`` such that ``f^{(n)}(\bar{x}) > 0``, while ``f^{(j)}(\bar{x})=0`` for any ``1 < j < n``, where ``f^{(j)}`` denotes the ``j`` th-order derivative of ``f``.
+"""
+
+# ╔═╡ 5aaa0e88-cdd3-4688-adfa-11487ab512ac
+cm"""
+$(bth("3.3.10"))
+
+Consider a function ``f: R^n \rightarrow R``, and for any point ``\overline{\mathbf{x}} \in R^n`` and a nonzero direction ``\mathbf{d} \in R^n``, define ``F_{(\overline{\mathbf{x}} ; \mathbf{d})}(\lambda)=f(\overline{\mathbf{x}}+\lambda \mathbf{d})`` as a function of ``\lambda \in R``. Then ``f`` is (strictly) convex if and only if ``F_{(\overline{\mathbf{x}} ; \mathbf{d})}`` is (strictly) convex for all ``\overline{\mathbf{x}}`` and ``\mathbf{d} \neq \mathbf{0}`` in ``R^n``.
+"""
+
+# ╔═╡ 53023197-6e74-4968-8fa4-ce0fee8bf6d9
+cm"""
+$(bth("3.3.12 (Checking for PSD/PD)"))
+
+Let ``\mathbf{H}`` be a symmetric ``n \times n`` matrix with elements ``h_{i j}``.
+- (a) If ``h_{i i} \leq 0`` for any ``i \in\{1, \ldots, n\}, \mathbf{H}`` is not positive definite; and if ``h_{i i}<`` 0 for any ``i \in\{1, \ldots, n\}, \mathbf{H}`` is not positive semidefinite.
+
+- (b) If ``h_{i i}=0`` for any ``i \in\{1, \ldots, n\}``, we must have ``h_{i j}=h_{j i}=0`` for all ``j= 1, \ldots, n`` as well, or else ``\mathbf{H}`` is not positive semidefinite.
+
+- (c) If ``n=1, \mathbf{H}`` is positive semidefinite (positive definite) if and only if ``h_{11} \geq 0(>0)``. Otherwise, if ``n \geq 2``, let
+```math
+\mathbf{H}=\left[\begin{array}{cc}
+h_{11} & \mathbf{q}^t \\
+\mathbf{q} & \mathbf{G}
+\end{array}\right]
+```
+$(add_space(10))in partitioned form, where ``\mathbf{q}=\mathbf{0}`` if ``h_{11}=0``, and otherwise, ``h_{11}>0``. 
+Perform elementary Gauss-Jordan operations using the first row of ``\mathbf{H}`` to reduce it to the following matrix in either case:
+```math
+\mathbf{H}=\left[\begin{array}{cc}
+h_{11} & \mathbf{q}^t \\
+\mathbf{0} & \mathbf{G}_{\text {new }}
+\end{array}\right]
+```
+$(add_space(10))Then ``\mathbf{G}_{\text {new }}`` is a symmetric ``(n-1) \times(n-1)`` matrix, and ``\mathbf{H}`` is positive semidefinite if and only if ``\mathbf{G}_{\text {new }}`` is positive semidefinite. Moreover, if ``h_{11}>0, \mathbf{H}`` is positive definite if and only if ``\mathbf{G}_{\text {new }}`` is positive definite.
+"""
+
+# ╔═╡ 08a79da6-d7be-4749-8c7a-960dd85d9404
+cm"""
+$(bbl("Corollary"))
+Let ``\mathbf{H}`` be an ``n \times n`` symmetric matrix. Then ``\mathbf{H}`` is positive definite if and only if it is positive semidefinite and nonsingular.
+"""
+
+# ╔═╡ 9d66f924-30a8-428e-9f48-06b0be9b9687
+cm"""
+$(ex(3)) 
+Consider the matrix
+```math
+\mathbf{H}=\left[\begin{array}{lll}
+2 & 1 & 2 \\
+1 & 2 & 3 \\
+2 & 3 & 4
+\end{array}\right]
+```
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -3368,6 +3545,22 @@ version = "1.8.1+0"
 # ╟─017ac677-b8d3-40a9-90c3-ec7d4c463f0f
 # ╟─44c72d9b-0adc-49e7-a878-184951cefe0d
 # ╟─3c14bb03-4fff-47d0-8fc8-643561950b2a
+# ╟─788874c6-a13f-4718-86d5-bdbba1b588c8
+# ╟─657034bf-4034-4b37-995b-cc3e22a6ff19
+# ╟─f22887ef-aabb-4a52-9f38-afb2f82ed16b
+# ╟─4a15eb36-dd71-4ad4-9512-6f189a448bb8
+# ╟─de381e37-2c8e-4e42-a4b8-292cb349ed3d
+# ╟─af8c90dd-3f32-40ed-91d1-1287919109c4
+# ╟─3e9400d7-48f7-4b1c-8bdf-441b874e99a7
+# ╟─c78f468a-75c8-41dc-896c-1021765adf83
+# ╟─57d1b602-1b3f-4de6-85d3-ac158a01bcc8
+# ╟─20fdb0be-e603-4414-bb8e-d9df5b3d4666
+# ╟─1e87dde2-48a2-4158-b20a-af94fc2f3308
+# ╟─5aaa0e88-cdd3-4688-adfa-11487ab512ac
+# ╟─53023197-6e74-4968-8fa4-ce0fee8bf6d9
+# ╟─08a79da6-d7be-4749-8c7a-960dd85d9404
+# ╟─9d66f924-30a8-428e-9f48-06b0be9b9687
+# ╟─b2cbaa21-30b7-4eaa-bbba-2a100b4e3f7f
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
