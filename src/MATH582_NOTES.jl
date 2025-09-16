@@ -385,6 +385,142 @@ let
 # 	map(i->det(M[1:i,1:i]), 1:3)
 end
 
+# ╔═╡ e8637759-f3b0-4acd-8d37-0d61098d8b16
+md"## 3.4 Minima and Maxima of Convex Functions"
+
+# ╔═╡ 6e85e225-d792-4ad7-aade-e048c78f62e2
+md"### Minimizing a Convex Function "
+
+# ╔═╡ 2adf10df-7961-4329-ad96-f031d405586f
+let
+	# Define the constraints:
+	# -x₁ + x₂ ≤ 2  →  x₂ ≤ x₁ + 2
+	# 2x₁ + 3x₂ ≤ 11  →  x₂ ≤ (11 - 2x₁)/3
+	# -x₁ ≤ 0  →  x₁ ≥ 0
+	# -x₂ ≤ 0  →  x₂ ≥ 0
+	
+	# Create a range of x₁ values
+	x1_range = 0:0.1:6
+	
+	# Define constraint functions
+	constraint1(x1) = x1 + 2          # x₂ ≤ x₁ + 2
+	constraint2(x1) = (11 - 2*x1)/3   # x₂ ≤ (11 - 2x₁)/3
+	
+	# Create the plot
+	plt = plot(xlims=(-1, 6), ylims=(-5, 6), 
+	           xlabel="x₁", ylabel="x₂", 
+	           title="Feasible Region", 
+	           legend=:bottomright,
+	           grid=true, gridwidth=1, gridcolor=:lightgray,
+			   frame_style=:origin
+			  )
+	
+	# Plot constraint lines
+	plot!(plt, x1_range, constraint1.(x1_range), 
+	      label="-x₁ + x₂ = 2", linewidth=2, color=:blue)
+	plot!(plt, x1_range, constraint2.(x1_range), 
+	      label="2x₁ + 3x₂ = 11", linewidth=2, color=:red)
+	
+	# Add boundary lines for non-negativity constraints
+	vline!(plt, [0], label="x₁ = 0", linewidth=2, color=:green)
+	hline!(plt, [0], label="x₂ = 0", linewidth=2, color=:orange)
+	
+	# Find intersection points to define the feasible region vertices
+	vertices = []
+	
+	# Intersection of x₁ = 0 and x₂ = 0
+	push!(vertices, (0, 0))
+	
+	# Intersection of x₁ = 0 and -x₁ + x₂ = 2
+	push!(vertices, (0, 2))
+	
+	# Intersection of -x₁ + x₂ = 2 and 2x₁ + 3x₂ = 11
+	# Solving: -x₁ + x₂ = 2 and 2x₁ + 3x₂ = 11
+	# From first: x₂ = x₁ + 2
+	# Substituting: 2x₁ + 3(x₁ + 2) = 11 → 5x₁ + 6 = 11 → x₁ = 1
+	# Therefore: x₂ = 3
+	push!(vertices, (1, 3))
+	
+	# Intersection of 2x₁ + 3x₂ = 11 and x₂ = 0
+	# 2x₁ + 3(0) = 11 → x₁ = 5.5
+	push!(vertices, (5.5, 0))
+	
+	# Extract x and y coordinates for filling
+	x_coords = [v[1] for v in vertices]
+	y_coords = [v[2] for v in vertices]
+	
+	# Fill the feasible region
+	plot!(plt, x_coords, y_coords, 
+	      seriestype=:shape, 
+	      fillalpha=0.3, 
+	      fillcolor=:lightblue,
+	      linecolor=:black,
+	      linewidth=2,
+	      label="Feasible Region")
+	
+	# Mark the vertices
+	scatter!(plt, x_coords, y_coords, 
+	         markersize=6, 
+	         markercolor=:black,
+	         label="Vertices")
+	
+	# Add vertex labels
+	for (i, (x, y)) in enumerate(vertices)
+	    annotate!(plt, x + 0.1, y + 0.1, text("($x, $y)", 10, :black))
+	end
+	# Define the objective function f(x₁, x₂) = (x₁ - 3/2)² + (x₂ - 5)²
+	f(x1, x2) = (x1 - 3/2)^2 + (x2 - 5)^2
+	
+	# Create a grid for contour plotting
+	x1_grid = 0:0.1:6
+	x2_grid = 0:0.1:5
+	X1 = repeat(x1_grid', length(x2_grid), 1)
+	X2 = repeat(x2_grid, 1, length(x1_grid))
+	Z = f.(X1, X2)
+	
+	# Add contour lines
+	contour!(plt, x1_grid, x2_grid, Z, 
+	         levels=10, 
+	         color=:purple, 
+	         linewidth=1.5,
+	         linestyle=:dash,
+	         label="f(x₁,x₂) contours")
+	
+	# Mark the center point of the function (3/2, 5)
+	scatter!(plt, [1.5], [5], 
+	         markersize=8, 
+	         markercolor=:purple,
+	         markershape=:star,
+	         label="Center (3/2, 5)")
+	
+	# Add annotation for the center
+	annotate!(plt, 1.5 + 0.2, 5 + 0.1, text("(3/2, 5)", 10, :purple))
+
+	# Add vector [-1, -4] starting at point (1, 3)
+	start_point = (1, 3)
+	vector = [-1, -4]
+	vector = vector/norm(vector)
+	end_point = (start_point[1] + vector[1], start_point[2] + vector[2])
+	
+	# Plot the vector as an arrow
+	plot!(plt, [start_point[1], end_point[1]], [start_point[2], end_point[2]], 
+	      arrow=true, 
+	      arrowsize=0.1,
+	      linewidth=3, 
+	      color=:darkgreen,
+	      label="Vector [-1, -4]")
+	
+	# Add annotation for the vector
+	annotate!(plt, start_point[1] - 0.3, start_point[2] - 0.5, 
+	          text("[-1, -4]", 10, :darkgreen))
+	# Update the title to reflect both elements
+	plot!(plt, title="Feasible Region with Contours of"*L"f(x_1,x_2) = (x_1-3/2)^2 + (x_2-5)^2")
+	plt
+end
+
+# ╔═╡ 9f88e2bc-4137-42a0-bcc2-e4d377c27f00
+md"### Maximizing a Convex Function "
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -1729,6 +1865,185 @@ Consider the matrix
 2 & 3 & 4
 \end{array}\right]
 ```
+"""
+
+# ╔═╡ 997295b0-bc83-4a2e-a81f-52212c041152
+cm"""
+$(define("Solutions"))
+Let ``f: R^n \rightarrow R`` and consider the problem 
+```math
+\min f(\mathbf{x})
+\quad \text{subject to}\quad  \mathbf{x} \in S.
+```
+- A point ``\mathbf{x} \in S`` is called a __feasible solution__ to the problem. 
+- A feasible solution ``\overline{\mathbf{x}}`` is called an __optimal solution__, a __global optimal solution__, or simply a __solution__ to the problem if  
+```math
+f(\overline{\mathbf{x}}) \leq f(\mathbf{x}) \quad \text{for each} \quad \mathbf{x} \in S.
+``` 
+
+- The collection of optimal solutions are called __alternative optimal solutions__.
+
+- A feasible solution ``\overline{\mathbf{x}}`` is called a __local optimal solution__ if there exists an ``\varepsilon``-neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}})`` around ``\overline{\mathbf{x}}`` such that 
+
+```math
+f(\overline{\mathbf{x}})\leq f(\mathbf{x}) \quad \text{for each }\quad \mathbf{x} \in S \cap N_{\varepsilon}(\overline{\mathbf{x}}).
+```
+
+- A feasible solution ``\overline{\mathbf{x}}``  is called a __strict local optimal solution__ if there exists ``\varepsilon>0`` such that 
+```math
+f(\overline{\mathbf{x}})< f(\mathbf{x}) \quad \text{for all}\quad \mathbf{x} \in S \cap N_{\varepsilon}(\overline{\mathbf{x}}), \mathbf{x} \neq \overline{\mathbf{x}}.
+```
+
+-  A feasible solution ``\overline{\mathbf{x}}`` is called a __strong__ or __isolated__ local optimal solution if it is the only local minimum in ``S \cap N_{\varepsilon}(\overline{\mathbf{x}})`` for some ``\varepsilon`` neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}})`` around ``\overline{\mathbf{x}}``.
+
+- All these types (``\varepsilon``) of local optima or minima are sometimes also referred to as __relative minima__. 
+
+Figure below illustrates instances of local and global minima for the problem of minimizing ``f(\mathbf{x})`` subject to ``\mathbf{x} \in S``, where ``f`` and ``S`` are shown in the figure.
+
+$(post_img("https://www.dropbox.com/scl/fi/op414xeqtdnz5o5qsiogt/fig3.6.png?rlkey=xopzhhjcubqvnuowdpthu2ju3&dl=1"))
+"""
+
+# ╔═╡ 9f633dba-e6b5-4d9f-b7b0-2f505c4642ab
+cm"""
+$(bbl("Remarks",""))
+- Any isolated local minimum is always strict.
+- A **strict local minimum** does **not** always have to be **isolated**. That means you can have a strict local minimum point, but there could still be other local minima arbitrarily close to it.
+"""
+
+# ╔═╡ da04715d-9713-4230-9d25-df069c19c9d4
+cm"""
+$(ex("Example",""))
+
+Consider
+```math
+  f(x) = \begin{cases} 
+  1 & x = 1, \\ 
+  2 & \text{otherwise}.
+  \end{cases}
+```
+
+* Domain: ``S = \mathbb{R}``.
+* ``x=1`` is a **strict local minimum**.
+* But it’s **not isolated**: any neighborhood around ``x=1`` contains other points (all with ``f(x)=2``) that are also local minima.
+
+---
+
+$(ex("Example",""))
+
+* Function: ``f(x) = x^2``.
+* Domain: ``S = \{ 1/2^k : k=0,1,2,\ldots \} \cup \{0\}``. (A nonconvex set made of discrete points approaching 0.)
+* For any ``k \ge 0``, ``x = 1/2^k`` is a **strict local minimum** because it’s an isolated point of the domain.
+* At ``x=0``, we also have a **strict local minimum** (in fact, the **global minimum**) with value ``f(0)=0``.
+* But ``x=0`` is **not isolated** because points like ``1/2, 1/4, 1/8, \ldots`` approach it.
+
+
+
+"""
+
+# ╔═╡ 1c9a2d2f-39d5-453e-8a82-bda18570e762
+cm"""
+$(bth("3.4.2"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R`` be convex on ``S``. Consider the problem 
+```math 
+\min f(\mathbf{x}) \quad \text{subject to}\quad \mathbf{x} \in S.
+```
+Suppose that ``\overline{\mathbf{x}} \in S`` is a local optimal solution to the problem.
+1. Then ``\overline{\mathbf{x}}`` is a global optimal solution.
+2. If either ``\overline{\mathbf{x}}`` is a strict local minimum or ``f`` is strictly convex, ``\overline{\mathbf{x}}`` is the unique global optimal solution and is also a strong local minimum.
+"""
+
+# ╔═╡ 61e3e889-4444-4ecb-91a1-3d8f91d0054a
+cm"""
+$(bth("3.4.3"))
+
+Let ``f: R^n \rightarrow R`` be a convex function, and let ``S`` be a nonempty convex set in ``R^n``. Consider the problem 
+```math 
+\min f(\mathbf{x}) \quad \text{subject to}\quad \mathbf{x} \in S.
+```
+The point ``\overline{\mathbf{x}} \in S`` is an optimal solution to this problem if and only if ``f`` has a subgradient ``\boldsymbol{\xi}`` at ``\overline{\mathbf{x}}`` such that ``\xi^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for all ``\mathbf{x} \in S``.
+"""
+
+# ╔═╡ 8c011096-3474-4d80-b40d-d72fd50e621b
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/nl863u4ywfqq9u4sa11ds/fig3.8.png?rlkey=1zximze8kzaoy6rpqepavm5r7&dl=1"))
+"""
+
+# ╔═╡ 44ecea1f-be97-4fb5-a62e-0177b98d5404
+cm"""
+$(bbl("Corollary","1"))
+Under the assumptions of Theorem 3.4.3, if ``S`` is __open__, ``\overline{\mathbf{x}}`` is an optimal solution to the problem if and only if there exists a zero subgradient of ``f`` at ``\overline{\mathbf{x}}``. In particular, if ``S=R^n, \overline{\mathbf{x}}`` is a global minimum if and only if there exists a zero subgradient of ``f`` at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ c3cfdf7e-0621-4add-9d85-945508a44eec
+cm"""
+$(bbl("Corollary","2"))
+In addition to the assumptions of the theorem, suppose that ``f`` is differentiable. Then ``\overline{\mathbf{x}}`` is an optimal solution if and only if ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for all ``\mathbf{x} \in S``. Furthermore, if ``S`` is open, ``\overline{\mathbf{x}}`` is an optimal solution if and only if ``\nabla f(\overline{\mathbf{x}})=0``.
+"""
+
+# ╔═╡ b283d6eb-0d60-4eb8-af1b-2a30f4f5e596
+cm"""
+$(bth("3.4.4"))
+Consider the problem to minimize ``f(\mathbf{x})`` subject to ``\mathbf{x} \in S``, where ``f`` is a convex and twice differentiable function and ``S`` is a convex set, and suppose that there exists an optimal solution ``\overline{\mathbf{x}}``. Then the set of alternative optimal solutions is characterized by the set
+```math
+S^*=\left\{\mathbf{x} \in S: \nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \leq 0 \text { and } \nabla f(\mathbf{x})=\nabla f(\overline{\mathbf{x}})\right\}
+```
+"""
+
+# ╔═╡ f6c2cbee-b331-4132-946e-bbe9fd3b5881
+cm"""
+
+$(bbl("Corollary","1"))
+
+The set ``S^*`` of alternative optimal solutions can equivalently be defined as
+```math
+S^*=\left\{\mathbf{x} \in S: \nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}})=0 \text { and } \nabla f(\mathbf{x})=\nabla f(\overline{\mathbf{x}})\right\}
+```
+"""
+
+# ╔═╡ 8d3beee4-64ef-4942-adc2-739122182dc9
+cm"""
+$(bbl("Corollary", "2"))
+Suppose that ``f`` is a quadratic function given by ``f(\mathbf{x})=\mathbf{c}^t \mathbf{x}+(1 / 2) \mathbf{x}^t \mathbf{H} \mathbf{x}`` and that ``S`` is polyhedral. Then ``S^*`` is a polyhedral set given by
+```math
+\begin{gathered}
+S^*=\left\{\mathbf{x} \in S: \mathbf{c}^t(\mathbf{x}-\overline{\mathbf{x}}) \leq 0, \mathbf{H}(\mathbf{x}-\overline{\mathbf{x}})=\mathbf{0}\right\}\\ =\left\{\mathbf{x} \in S: \mathbf{c}^t(\mathbf{x}-\overline{\mathbf{x}})=0\right. ,
+\mathbf{H}(\mathbf{x}-\overline{\mathbf{x}})=\mathbf{0}\}
+\end{gathered}
+```
+"""
+
+# ╔═╡ f6180dbc-4c0d-4b06-9670-9a4122e7681c
+cm"""
+$(ex("Example",""))
+```math
+\begin{aligned}
+\operatorname{Minimize}\left(x_1-\frac{3}{2}\right)^2 & +\left(x_2-5\right)^2 \\
+\text { subject to }-x_1+x_2 & \leq 2 \\
+2 x_1+3 x_2 & \leq 11 \\
+-x_1 & \leq 0 \\
+-x_2 & \leq 0
+\end{aligned}
+```
+"""
+
+# ╔═╡ d3bcf477-8bf6-4193-a6b1-d0f924c32bf5
+cm"""
+$(bth("3.4.6"))
+
+Let ``f: R^n \rightarrow R`` be a convex function, and let ``S`` be a nonempty convex set in ``R^n``. Consider the problem to maximize ``f(\mathbf{x})`` subject to ``\mathbf{x} \in S``. If ``\overline{\mathbf{x}} \in S`` is a local optimal solution, ``\boldsymbol{\xi}^t(\mathbf{x}-\overline{\mathbf{x}}) \leq 0`` for each ``\mathbf{x} \in S``, where ``\boldsymbol{\xi}`` is any subgradient of ``f`` at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ 8b0eaffa-18c3-4174-a4db-8cb514c728bf
+cm"""
+$(bbl("Corollary",""))
+In addition to the assumptions of the theorem, suppose that ``f`` is differentiable. If ``\overline{\mathbf{x}} \in S`` is a local optimal solution, ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \leq 0`` for all ``\mathbf{x} \in S``.
+"""
+
+# ╔═╡ a5ccf185-1a61-47ea-9fe2-b33b7bba8e6c
+cm"""
+$(bth("3.4.7"))
+
+Let ``f: R^n \rightarrow R`` be a convex function, and let ``S`` be a nonempty compact polyhedral set in ``R^n``. Consider the problem to maximize ``f(\mathbf{x})`` subject to ``\mathbf{x} \in S``. An optimal solution ``\overline{\mathbf{x}}`` to the problem then exists, where ``\overline{\mathbf{x}}`` is an extreme point of ``S``.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -3561,6 +3876,25 @@ version = "1.8.1+0"
 # ╟─08a79da6-d7be-4749-8c7a-960dd85d9404
 # ╟─9d66f924-30a8-428e-9f48-06b0be9b9687
 # ╟─b2cbaa21-30b7-4eaa-bbba-2a100b4e3f7f
+# ╟─e8637759-f3b0-4acd-8d37-0d61098d8b16
+# ╟─6e85e225-d792-4ad7-aade-e048c78f62e2
+# ╟─997295b0-bc83-4a2e-a81f-52212c041152
+# ╟─9f633dba-e6b5-4d9f-b7b0-2f505c4642ab
+# ╟─da04715d-9713-4230-9d25-df069c19c9d4
+# ╟─1c9a2d2f-39d5-453e-8a82-bda18570e762
+# ╟─61e3e889-4444-4ecb-91a1-3d8f91d0054a
+# ╟─8c011096-3474-4d80-b40d-d72fd50e621b
+# ╟─44ecea1f-be97-4fb5-a62e-0177b98d5404
+# ╟─c3cfdf7e-0621-4add-9d85-945508a44eec
+# ╟─b283d6eb-0d60-4eb8-af1b-2a30f4f5e596
+# ╟─f6c2cbee-b331-4132-946e-bbe9fd3b5881
+# ╟─8d3beee4-64ef-4942-adc2-739122182dc9
+# ╟─f6180dbc-4c0d-4b06-9670-9a4122e7681c
+# ╟─2adf10df-7961-4329-ad96-f031d405586f
+# ╟─9f88e2bc-4137-42a0-bcc2-e4d377c27f00
+# ╟─d3bcf477-8bf6-4193-a6b1-d0f924c32bf5
+# ╟─8b0eaffa-18c3-4174-a4db-8cb514c728bf
+# ╟─a5ccf185-1a61-47ea-9fe2-b33b7bba8e6c
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
