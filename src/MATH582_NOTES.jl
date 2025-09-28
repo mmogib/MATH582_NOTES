@@ -542,6 +542,15 @@ f(x)= \begin{cases}1 & \text { if } x=0 \\ 0 & \text { if } x \neq 0\end{cases}
 By Definition, ``f`` is strictly quasiconvex. However, ``f`` is not quasiconvex,
 """
 
+# ╔═╡ 7deefd68-4955-4fdb-bc76-1de2ccd841c8
+md"### Strongly Quasiconvex Functions"
+
+# ╔═╡ 12e8d772-374b-438f-a5b9-df7fdab33d4a
+md"### Pseudoconvex Functions "
+
+# ╔═╡ 9cc4f6fc-b656-48d7-8c8f-da23d1e5419c
+md"### Convexity at a Point "
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -2103,7 +2112,7 @@ $(bth("3.5.3 "))
 
 Let ``S`` be a nonempty compact polyhedral set in ``R^n``, and let ``f: R^n \rightarrow R`` be quasiconvex and continuous on ``S``. Consider the problem 
 ```math
-\max \quad f(\mathbf{x})\quad \text{subject to} \mathbf{x} \in S.
+\max \quad f(\mathbf{x})\quad \text{subject to } \mathbf{x} \in S.
 ```
 Then an optimal solution ``\overline{\mathbf{x}}`` to the problem exists, where ``\overline{\mathbf{x}}`` is an extreme point of ``S``.
 """
@@ -2149,6 +2158,127 @@ cm"""
 $(bbl("Lemma","3.5.7"))
 
 Let ``S`` be a nonempty convex set in ``R^n`` and let ``f: S \rightarrow R`` be strictly quasiconvex and lower semicontinuous. Then ``f`` is quasiconvex.
+"""
+
+# ╔═╡ 819fbc46-b696-4522-8fa4-ee68c89058b4
+cm"""
+$(define("Strongly Quasiconvex"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R``. The function ``f`` is said to be __strongly quasiconvex__ if for each ``\mathbf{x}_1, \mathbf{x}_2 \in S``, with ``\mathbf{x}_1 \neq \mathbf{x}_2``, we have
+```math
+f\left[\lambda \mathbf{x}_1+(1-\lambda) \mathbf{x}_2\right]<\max \left\{f\left(\mathbf{x}_1\right), f\left(\mathbf{x}_2\right)\right\}
+```
+for each ``\lambda \in(0,1)``. The function ``f`` is said to be __strongly quasiconcave__ if ``-f`` is strongly quasiconvex. 
+
+
+The following statements hold true:
+1. __strictly convex__ ``\Rightarrow`` __strongly quasiconvex__.
+2. __strongly quasiconvex__ ``\Rightarrow`` __strictly quasiconvex__.
+3. __strongly quasiconvex__ ``\Rightarrow`` __quasiconvex__ (even in the absence of any semicontinuity assumption.)
+"""
+
+# ╔═╡ 7a73b652-eae0-4ebe-b472-2ac1984607cf
+cm"""
+$(bth("3.5.9"))
+
+Let ``f: R^n \rightarrow R`` be __strongly quasiconvex__. 
+Consider the problem to 
+```math
+\min \; f(\mathbf{x}) \quad \text{subject to } \mathbf{x} \in S,
+```
+where ``S`` is a nonempty convex set in ``\mathbb{R}^n``. If ``\overline{\mathbf{x}}`` is a local optimal solution, ``\overline{\mathbf{x}}`` is the __unique__ global optimal solution.
+"""
+
+# ╔═╡ 434b0a5a-6937-4ed4-ac9a-8961d9578145
+cm"""
+$(define("Pseudoconvex Functions"))
+
+Let ``S`` be a nonempty open set in ``R^n``, and let ``f: S \rightarrow R`` be differentiable on ``S``. The function ``f`` is said to be __pseudoconvex__ if for each ``\mathbf{x}_1, \mathbf{x}_2 \in S``, then
+```math
+\nabla f\left(\mathbf{x}_1\right)^t \left(\mathbf{x}_2-\mathbf{x}_1\right) \geq 0\quad \Rightarrow \quad f\left(\mathbf{x}_2\right) \geq f\left(\mathbf{x}_1\right);
+```
+or equivalently, 
+```math
+f\left(\mathbf{x}_2\right) <  f\left(\mathbf{x}_1\right)\quad\Rightarrow\quad  \nabla f\left(\mathbf{x}_1\right)^t\left(\mathbf{x}_2-\mathbf{x}_1\right)<0.
+```
+
+The function ``f`` is said to be __pseudoconcave__ if ``-f`` is pseudoconvex.
+
+
+
+The function ``f`` is said to be __strictly pseudoconvex__ if for each distinct ``\mathbf{x}_1``, ``\mathbf{x}_2 \in S`` satisfying 
+```math
+\nabla f\left(\mathbf{x}_1\right)^t\left(\mathbf{x}_2-\mathbf{x}_1\right) \geq 0\quad\Rightarrow \quad f\left(\mathbf{x}_2\right) \geq f\left(\mathbf{x}_1\right);
+```
+or equivalently, if for each distinct ``\mathbf{x}_1, \mathbf{x}_2 \in S``,
+```math
+f\left(\mathbf{x}_2\right) \leq f\left(\mathbf{x}_1\right)\quad\Rightarrow\quad \nabla f\left(\mathbf{x}_1\right)^t\left(\mathbf{x}_2-\mathbf{x}_1\right)<0.
+```
+The function ``f`` is said to be __strictly pseudoconcave__ if ``-f`` is strictly pseudoconvex.
+"""
+
+# ╔═╡ f902fff5-6175-48d2-bebc-27c7e0f72d10
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/5q4mnjipmwm6s22i2aop5/fig3.12.png?rlkey=wrzzu5hdqlsgo5vy14avg5j9o&dl=1"))
+"""
+
+# ╔═╡ 960eff24-3070-4051-a4e0-f25a00b935b7
+cm"""
+$(bth("3.5.11"))
+
+Let ``S`` be a nonempty open convex set in ``R^n``, and let ``f: S \rightarrow R`` be a differentiable pseudoconvex function on ``S``. Then ``f`` is both strictly quasiconvex and quasiconvex.
+"""
+
+# ╔═╡ e87f8c80-c756-4ff8-9e7d-ef35d8941afd
+cm"""
+$(bth("3.5.12"))
+
+Let ``S`` be a nonempty open convex set in ``R^n``, and let ``f: S \rightarrow R`` be a differentiable strictly pseudoconvex function. Then ``f`` is strongly quasiconvex.
+
+"""
+
+# ╔═╡ 22b3e9fa-cf5d-43c3-b964-758b26e33468
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/x11nrxhomjrjsdvhvbakp/fig3.13.png?rlkey=8aow6soltthdbjipkx2w1d3jk&dl=1"))
+"""
+
+# ╔═╡ 4cb4d21c-464e-4675-b0b8-3872195ecc76
+cm"""
+$(define("Convexity at a Point"))
+Let ``S`` be a nonempty convex set in ``R^n``, and let ``f: S \rightarrow R``. The following are relaxations of various forms of convexity presented in this chapter:
+
+- Convexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be convex at ``\overline{\mathbf{x}} \in S`` if
+```math
+f[\lambda \overline{\mathbf{x}}+(1-\lambda) \mathbf{x}] \leq \lambda f(\overline{\mathbf{x}})+(1-\lambda) f(\mathbf{x})
+```
+for each ``\lambda \in(0,1)`` and each ``\mathbf{x} \in S``.
+
+- Strict convexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be strictly convex at ``\overline{\mathbf{x}} \in S`` if
+```math
+f[\lambda \overline{\mathbf{x}}+(1-\lambda) \mathbf{x}]<\lambda f(\overline{\mathbf{x}})+(1-\lambda) f(\mathbf{x})
+```
+for each ``\lambda \in(0,1)`` and for each ``\mathbf{x} \in S, \mathbf{x} \neq \overline{\mathbf{x}}``.
+
+- Quasiconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be quasiconvex at ``\overline{\mathbf{x}} \in S`` if
+```math
+f[\lambda \overline{\mathbf{x}}+(1-\lambda) \mathbf{x}] \leq \max \{f(\mathbf{x}), f(\overline{\mathbf{x}})\}
+```
+for each ``\lambda \in(0,1)`` and each ``\mathbf{x} \in S``.
+
+- Strict quasiconvexity at ``\overline{\mathbf{x}}``. The function is said to be strictly quasiconvex at ``\overline{\mathbf{x}} \in S`` if
+```math
+f[\lambda \overline{\mathbf{x}}+(1-\lambda) \mathbf{x}]<\max \{f(\mathbf{x}), f(\overline{\mathbf{x}})\}
+```
+for each ``\lambda \in(0,1)`` and each ``\mathbf{x} \in S`` such that ``f(\mathbf{x}) \neq f(\overline{\mathbf{x}})``.
+
+- Strong quasiconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be strongly quasiconvex at ``\overline{\mathbf{x}} \in S`` if
+```math
+f[\lambda \overline{\mathbf{x}}+(1-\lambda) \mathbf{x}]<\max \{f(\mathbf{x}), f(\overline{\mathbf{x}})\}
+```
+for each ``\lambda \in(0,1)`` and each ``\mathbf{x} \in S, \mathbf{x} \neq \overline{\mathbf{x}}``.
+
+- Pseudoconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be pseudoconvex at ``\overline{\mathbf{x}} \in S`` if ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for ``\mathbf{x} \in S`` implies that ``f(\mathbf{x}) \geq f(\overline{\mathbf{x}})``.
+
+- Strict pseudoconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be strictly pseudoconvex at ``\overline{\mathbf{x}} \in S`` if ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for ``\mathbf{x} \in S, \mathbf{x} \neq \overline{\mathbf{x}}``, implies that ``f(\mathbf{x})>f(\overline{\mathbf{x}})``.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -4012,6 +4142,17 @@ version = "1.8.1+0"
 # ╟─375e3f9e-45fb-42da-b177-54c77c1081db
 # ╟─c3f319d2-23fc-4c41-a7f2-23f831073ae0
 # ╟─7a0aa831-6dd4-4b77-891d-aa56892f7759
+# ╟─7deefd68-4955-4fdb-bc76-1de2ccd841c8
+# ╟─819fbc46-b696-4522-8fa4-ee68c89058b4
+# ╟─7a73b652-eae0-4ebe-b472-2ac1984607cf
+# ╟─12e8d772-374b-438f-a5b9-df7fdab33d4a
+# ╟─434b0a5a-6937-4ed4-ac9a-8961d9578145
+# ╟─f902fff5-6175-48d2-bebc-27c7e0f72d10
+# ╟─960eff24-3070-4051-a4e0-f25a00b935b7
+# ╟─e87f8c80-c756-4ff8-9e7d-ef35d8941afd
+# ╟─22b3e9fa-cf5d-43c3-b964-758b26e33468
+# ╟─9cc4f6fc-b656-48d7-8c8f-da23d1e5419c
+# ╟─4cb4d21c-464e-4675-b0b8-3872195ecc76
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
