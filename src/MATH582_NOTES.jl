@@ -551,6 +551,24 @@ md"### Pseudoconvex Functions "
 # ╔═╡ 9cc4f6fc-b656-48d7-8c8f-da23d1e5419c
 md"### Convexity at a Point "
 
+# ╔═╡ a03f6f56-54a8-423a-a405-5f9a83e5cdb2
+md"# Chapter 4: The Fritz John and Karush-Kuhn-Tucker Optimality Conditions"
+
+# ╔═╡ 8f0be524-cabb-4b78-99a6-9ecbfc6e57a3
+md"## 4.1 Unconstrained Problems "
+
+# ╔═╡ ab11e8fc-98e8-4372-a12f-c6133dcc65e3
+md"### Necessary Optimality Conditions "
+
+# ╔═╡ 7dfbcce2-1f0f-4f43-9e01-05bd0447ed32
+
+
+# ╔═╡ 3d3223ea-d105-45a5-9389-81de85a271ba
+md"### Sufficient Optimality Conditions "
+
+# ╔═╡ 807a80ef-2c20-400d-85b6-9fc71d21b5b8
+
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -2279,6 +2297,66 @@ for each ``\lambda \in(0,1)`` and each ``\mathbf{x} \in S, \mathbf{x} \neq \over
 - Pseudoconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be pseudoconvex at ``\overline{\mathbf{x}} \in S`` if ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for ``\mathbf{x} \in S`` implies that ``f(\mathbf{x}) \geq f(\overline{\mathbf{x}})``.
 
 - Strict pseudoconvexity at ``\overline{\mathbf{x}}``. The function ``f`` is said to be strictly pseudoconvex at ``\overline{\mathbf{x}} \in S`` if ``\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \geq 0`` for ``\mathbf{x} \in S, \mathbf{x} \neq \overline{\mathbf{x}}``, implies that ``f(\mathbf{x})>f(\overline{\mathbf{x}})``.
+"""
+
+# ╔═╡ fc4c567e-3cc2-4b85-9294-eae1e2da69fd
+cm"""
+$(define(""))
+Consider the problem of minimizing 
+```math
+f(\mathbf{x})\quad \text{over}\quad  \mathbb{R}^n,
+```
+and let ``\overline{\mathbf{x}} \in R^n``. 
+
+⚫ If ``f(\overline{\mathbf{x}}) \leq f(\mathbf{x})`` for all ``\mathbf{x} \in R^n, \overline{\mathbf{x}}`` is called a __global minimum__. 
+
+⚫ If there exists an ``\varepsilon`` neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}})`` around ``\overline{\mathbf{x}}`` such that 
+```math
+f(\overline{\mathbf{x}}) \leq f(\mathbf{x})\quad \text{for each}\quad \mathbf{x} \in N_{\varepsilon}(\overline{\mathbf{x}}), \overline{\mathbf{x}}
+``` 
+is called a __local minimum__, while if ``f(\overline{\mathbf{x}}) < f(\mathbf{x})`` for all ``\mathbf{x} \in N_{\varepsilon}(\overline{\mathbf{x}}), \mathbf{x} \neq \overline{\mathbf{x}}``, for some ``\varepsilon > 0, \overline{\mathbf{x}}`` is called a __strict local minimum__. Clearly, a global minimum is also a local minimum.
+"""
+
+# ╔═╡ 17154407-9b5d-46be-92b9-2d02005e5c9c
+cm"""
+
+$(bth("4.1.2"))
+
+Suppose that ``f: R^n \rightarrow R`` is differentiable at ``\overline{\mathbf{x}}``. If there is a vector ``\mathbf{d}`` such that ``\nabla f(\overline{\mathbf{x}})^t \mathbf{d} < 0``, there exists a ``\delta > 0`` such that ``f(\overline{\mathbf{x}}+\lambda \mathbf{d}) < f(\overline{\mathbf{x}})`` for each ``\lambda \in(0, \delta)``, so that ``\mathbf{d}`` is a descent direction of ``f`` at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ 8eba2357-e825-4232-875a-f18be55bd38a
+cm"""
+$(bbl("Corollary",""))
+Suppose that ``f: R^n \rightarrow R`` is differentiable at ``\overline{\mathbf{x}}``. If ``\overline{\mathbf{x}}`` is a local minimum, ``\nabla f(\overline{\mathbf{x}})=\mathbf{0}``.
+"""
+
+# ╔═╡ 4eebca6a-7e54-4d1c-84b2-cd893d4d2a3f
+cm"""
+$(bth("4.1.3 "))
+
+Suppose that ``f: R^n \rightarrow R`` is twice differentiable at ``\overline{\mathbf{x}}``. If ``\overline{\mathbf{x}}`` is a local minimum, ``\nabla f(\overline{\mathbf{x}})=\mathbf{0}`` and ``\mathbf{H}(\overline{\mathbf{x}})`` is positive semidefinite.
+"""
+
+# ╔═╡ b6809792-4885-4bdd-9dea-d4e93ebe68c6
+cm"""
+$(bth("4.1.4"))
+
+Suppose that ``f: R^n \rightarrow R`` is twice differentiable at ``\overline{\mathbf{x}}``. If ``\nabla f(\overline{\mathbf{x}})=0`` and ``\mathbf{H}(\overline{\mathbf{x}})`` is positive definite, ``\overline{\mathbf{x}}`` is a strict local minimum.
+"""
+
+# ╔═╡ 563d0e84-e2f3-49fe-b92e-6c0716ed8523
+cm"""
+$(bth("4.1.5"))
+
+Let ``f: R^n \rightarrow R`` be pseudoconvex at ``\overline{\mathbf{x}}``. Then ``\overline{\mathbf{x}}`` is a global minimum if and only if ``\nabla f(\overline{\mathbf{x}})=\mathbf{0}``.
+"""
+
+# ╔═╡ 010e228c-7590-4178-99b6-bb50819dfe1c
+cm"""
+$(bth("4.1.6"))
+
+Let ``f: R \rightarrow R`` be an infinitely differentiable univariate function. Then ``\bar{x} \in R`` is a local minimum if and only if either ``f^{(j)}(\bar{x})=0`` for all ``j=1,2, \ldots``, or else there exists an even ``n \geq 2`` such that ``f^{(n)}(\bar{x})>0`` while ``f^{(j)}(\bar{x})=0`` for all ``1 \leq j < n``, where ``f^{(j)}`` denotes the ``j`` th-order derivative of ``f``.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -4153,6 +4231,19 @@ version = "1.8.1+0"
 # ╟─22b3e9fa-cf5d-43c3-b964-758b26e33468
 # ╟─9cc4f6fc-b656-48d7-8c8f-da23d1e5419c
 # ╟─4cb4d21c-464e-4675-b0b8-3872195ecc76
+# ╟─a03f6f56-54a8-423a-a405-5f9a83e5cdb2
+# ╟─8f0be524-cabb-4b78-99a6-9ecbfc6e57a3
+# ╟─fc4c567e-3cc2-4b85-9294-eae1e2da69fd
+# ╟─ab11e8fc-98e8-4372-a12f-c6133dcc65e3
+# ╟─17154407-9b5d-46be-92b9-2d02005e5c9c
+# ╠═7dfbcce2-1f0f-4f43-9e01-05bd0447ed32
+# ╟─8eba2357-e825-4232-875a-f18be55bd38a
+# ╟─4eebca6a-7e54-4d1c-84b2-cd893d4d2a3f
+# ╟─3d3223ea-d105-45a5-9389-81de85a271ba
+# ╟─b6809792-4885-4bdd-9dea-d4e93ebe68c6
+# ╟─563d0e84-e2f3-49fe-b92e-6c0716ed8523
+# ╟─010e228c-7590-4178-99b6-bb50819dfe1c
+# ╠═807a80ef-2c20-400d-85b6-9fc71d21b5b8
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
