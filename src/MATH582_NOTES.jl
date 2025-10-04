@@ -4,6 +4,18 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    #! format: off
+    return quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+    #! format: on
+end
+
 # ╔═╡ 41c749c0-500a-11f0-0eb8-49496afa257e
 begin
     using CommonMark
@@ -567,7 +579,710 @@ md"### Necessary Optimality Conditions "
 md"### Sufficient Optimality Conditions "
 
 # ╔═╡ 807a80ef-2c20-400d-85b6-9fc71d21b5b8
+md"## 4.2 Problems Having Inequality Constraints"
 
+# ╔═╡ 72ccae91-7342-4780-92c6-b226ce13507c
+cm"""
+> We first develop a necessary optimality condition for the problem
+> ```math
+> \begin{array}{lll}
+> \min & f(x) \\
+> \text{subject to}\\
+> & x \in S\\
+> \end{array}
+> ```
+> for a general set ``S \subseteq \mathbb{R}^n``.
+"""
+
+# ╔═╡ ff54a546-4bd6-4d6e-9ea7-f4053635dc42
+md"### Geometric Optimality Conditions"
+
+# ╔═╡ 1391def6-0a0d-4e16-abbe-3644e56cab9b
+cm"""
+> We now consider the problem
+> ```math
+> \begin{array}{lll}
+> \min & f(x) \\
+> \text{subject to}\\
+> & g_i(x)\leq 0 & i=1,\cdots,m\\
+> & x \in X
+> \end{array}
+> ```
+> where ``g_i: R^n \rightarrow R`` for ``i=1, \ldots, m`` and ``X`` is a nonempty open set in ``\mathbb{R}^n``.
+"""
+
+# ╔═╡ 4719b6e7-4eba-43a4-8b8d-3bdf3a46712f
+begin
+	x1_val_html = @bind x1_val NumberField(0.0:0.01:3.0, default=1.5)
+
+	x2_val_html = @bind x2_val NumberField(0.0:0.01:3.0, default=1.0)
+	cm"""
+
+	``x_1=`` $(x1_val_html)
+	
+	``x_2=`` $(x2_val_html)
+	
+	"""
+end
+
+# ╔═╡ 10754f5c-e457-47a5-91d6-5f6ed203cda8
+let
+	# Define the objective function
+	f(x1, x2) = (x1 - 3)^2 + (x2 - 2)^2
+	
+	# Gradient of objective function
+	∇f(x1, x2) = [2*(x1 - 3), 2*(x2 - 2)]
+	
+	# Constraint functions (written as g(x) ≤ 0)
+	g1(x1, x2) = x1^2 + x2^2 - 5  # circle constraint
+	g2(x1, x2) = x1 + x2 - 3      # line constraint
+	g3(x1, x2) = -x1              # x1 ≥ 0
+	g4(x1, x2) = -x2              # x2 ≥ 0
+	
+	# Gradients of constraints
+	∇g1(x1, x2) = [2*x1, 2*x2]
+	∇g2(x1, x2) = [1, 1]
+	∇g3(x1, x2) = [-1, 0]
+	∇g4(x1, x2) = [0, -1]
+	
+	# Check which constraints are active (within tolerance)
+	tol = 0.001
+	function active_constraints(x1, x2)
+		active = []
+		if abs(g1(x1, x2)) < tol
+			push!(active, (1, "x₁² + x₂² ≤ 5", ∇g1(x1, x2)))
+		end
+		if abs(g2(x1, x2)) < tol
+			push!(active, (2, "x₁ + x₂ ≤ 3", ∇g2(x1, x2)))
+		end
+		if abs(g3(x1, x2)) < tol
+			push!(active, (3, "x₁ ≥ 0", ∇g3(x1, x2)))
+		end
+		if abs(g4(x1, x2)) < tol
+			push!(active, (4, "x₂ ≥ 0", ∇g4(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check if point is feasible
+	function is_feasible(x1, x2)
+		return g1(x1, x2) <= tol && g2(x1, x2) <= tol && 
+		       g3(x1, x2) <= tol && g4(x1, x2) <= tol
+	end
+
+	# Create the plot
+	x1_range = range(-0.5, 3.5, length=400)
+	x2_range = range(-0.5, 3.5, length=400)
+	p = plot(size=(800, 800), 
+			 aspect_ratio=:equal, 
+			 frame_style=:origin,
+	         xlabel="x₁", ylabel="x₂", 
+	         title="Gradients at ($(round(x1_val, digits=2)), $(round(x2_val, digits=2)))",
+	         legend=:topright, legendfontsize=8)
+	
+	# Plot contour curves
+	contour!(p, x1_range, x2_range, 
+	         (x1, x2) -> f(x1, x2), 
+	         levels=15, 
+	         color=:viridis, 
+	         linewidth=1.5,
+	         alpha=0.5,
+	         colorbar=false,
+	         label="")
+	
+	# Plot constraint boundaries
+	θ = range(0, 2π, length=200)
+	circle_x1 = sqrt(5) .* cos.(θ)
+	circle_x2 = sqrt(5) .* sin.(θ)
+	plot!(p, circle_x1, circle_x2, 
+	      linewidth=2.5, color=:red, 
+	      label="x₁² + x₂² = 5")
+	
+	x1_line = range(0, 3, length=100)
+	x2_line = 3 .- x1_line
+	plot!(p, x1_line, x2_line, 
+	      linewidth=2.5, color=:blue, 
+	      label="x₁ + x₂ = 3")
+	
+	plot!(p, [0, 0], [0, 3], 
+	      linewidth=2.5, color=:green, 
+	      label="x₁ = 0")
+	plot!(p, [0, 3], [0, 0], 
+	      linewidth=2.5, color=:orange, 
+	      label="x₂ = 0")
+	
+	# Shade feasible region
+	x1_grid = range(0, 3, length=150)
+	x2_grid = range(0, 3, length=150)
+	feasible_x1 = Float64[]
+	feasible_x2 = Float64[]
+	for x1 in x1_grid
+	    for x2 in x2_grid
+	        if x1 >= 0 && x2 >= 0 && x1^2 + x2^2 <= 5 && x1 + x2 <= 3
+	            push!(feasible_x1, x1)
+	            push!(feasible_x2, x2)
+	        end
+	    end
+	end
+	scatter!(p, feasible_x1, feasible_x2, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.9,
+	         label="")
+	
+	# Mark center of objective
+	scatter!(p, [3], [2], 
+	         markersize=8, 
+	         color=:purple, 
+	         markershape=:star,
+	         label="Center (3, 2)")
+	
+	# Plot selected point
+	point_color = is_feasible(x1_val, x2_val) ? :green : :red
+	scatter!(p, [x1_val], [x2_val], 
+	         markersize=10, 
+	         color=point_color, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f = ∇f(x1_val, x2_val)
+	scale = 0.3  # scale factor for gradient arrows
+	quiver!(p, [x1_val], [x2_val], 
+	        quiver=([scale*grad_f[1]], [scale*grad_f[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label="∇f")
+	annotate!(p, 0.1+x1_val + scale*grad_f[1], x2_val + scale*grad_f[2], 
+          text(L"\nabla f = \left[%$(round(grad_f[1], digits=2)), %$(round(grad_f[2], digits=2))\right]", 
+               :black, 12, :left))
+	# Plot gradients of active constraints
+	active = active_constraints(x1_val, x2_val)
+	colors = [:red, :blue, :green, :orange]
+	
+	for (i, name, grad) in active
+		quiver!(p, [x1_val], [x2_val], 
+		        quiver=([scale*grad[1]], [scale*grad[2]]), 
+		        color=colors[i], 
+		        linewidth=3,
+		        arrow=:closed,
+		        label="∇g$i")
+		# Add annotation for each active constraint gradient
+		annotate!(p, 0.1+x1_val + scale*grad[1], x2_val + scale*grad[2], 
+		          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               colors[i], 9, :left))
+	end
+	
+	xlims!(p, -0.5, 4.5)
+	ylims!(p, -0.5, 3.5)
+	
+	p
+end
+
+# ╔═╡ 8f24c28e-57bd-42ae-9883-1cebc0715a0c
+begin
+	x1_val_e2_html = @bind x1_val_e2 NumberField(0.0:0.01:3.0, default=1.5)
+
+	x2_val_e2_html = @bind x2_val_e2 NumberField(0.0:0.01:3.0, default=1.0)
+	cm"""
+
+	``x_1=`` $(x1_val_e2_html)
+	
+	``x_2=`` $(x2_val_e2_html)
+	
+	"""
+end
+
+# ╔═╡ 93a35971-c2eb-4dd3-bd66-b3335400861d
+let
+	# Define the objective function
+	f(x1, x2) = (x1 - 1)^2 + (x2 - 1)^2
+	
+	# Gradient of objective function
+	∇f(x1, x2) = [2*(x1 - 1), 2*(x2 - 1)]
+	
+	# Constraint functions (written as g(x) ≤ 0)
+	g1(x1, x2) = x1 + x2 - 1  # cubic constraint
+	g2(x1, x2) = -x1              # x1 ≥ 0
+	g3(x1, x2) = -x2              # x2 ≥ 0
+	
+	# Gradients of constraints
+	∇g1(x1, x2) = [1,1]
+	∇g2(x1, x2) = [-1, 0]
+	∇g3(x1, x2) = [0, -1]
+	
+	# Check which constraints are active (within tolerance)
+	tol = 0.1
+	function active_constraints(x1, x2)
+		active = []
+		if abs(g1(x1, x2)) < tol
+			push!(active, (1, "x₁ + x₂ - 1 ≤ 0", ∇g1(x1, x2)))
+		end
+		if abs(g2(x1, x2)) < tol
+			push!(active, (2, "x₁ ≥ 0", ∇g2(x1, x2)))
+		end
+		if abs(g3(x1, x2)) < tol
+			push!(active, (3, "x₂ ≥ 0", ∇g3(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check if point is feasible
+	function is_feasible(x1, x2)
+		return g1(x1, x2) <= tol && g2(x1, x2) <= tol && g3(x1, x2) <= tol
+	end
+
+	# Create the plot
+	x1_range = range(-0.2, 2.0, length=400)
+	x2_range = range(-0.2, 2.0, length=400)
+	
+	p = plot(size=(800, 800), 
+			 aspect_ratio=:equal, 
+			 frame_style=:origin,
+	         xlabel="x₁", ylabel="x₂", 
+	         title="Gradients at ($(round(x1_val_e2, digits=2)), $(round(x2_val_e2, digits=2)))",
+	         legend=:topright, legendfontsize=8)
+	
+	# Plot contour curves of objective
+	contour!(p, x1_range, x2_range, 
+	         (x1, x2) -> f(x1, x2), 
+	         levels=15, 
+	         color=:viridis, 
+	         linewidth=1.5,
+	         alpha=0.5,
+	         colorbar=false,
+	         label="")
+	
+	# Plot constraint boundaries
+	# For (x1 + x2 - 1)³ = 0, we have x1 + x2 = 1
+	x1_line = range(0, 1, length=100)
+	x2_line = 1 .- x1_line
+	plot!(p, x1_line, x2_line, 
+	      linewidth=2.5, color=:red, 
+	      label="x₁ + x₂ - 1 = 0")
+	
+	plot!(p, [0, 0], [0, 2], 
+	      linewidth=2.5, color=:green, 
+	      label="x₁ = 0")
+	plot!(p, [0, 2], [0, 0], 
+	      linewidth=2.5, color=:orange, 
+	      label="x₂ = 0")
+	
+	# Shade feasible region
+	# Feasible: (x1 + x2 - 1)³ ≤ 0 means x1 + x2 ≤ 1, and x1, x2 ≥ 0
+	x1_grid = range(0, 1.5, length=150)
+	x2_grid = range(0, 1.5, length=150)
+	feasible_x1 = Float64[]
+	feasible_x2 = Float64[]
+	for x1 in x1_grid
+	    for x2 in x2_grid
+	        if x1 >= 0 && x2 >= 0 && (x1 + x2 - 1)^3 <= 0
+	            push!(feasible_x1, x1)
+	            push!(feasible_x2, x2)
+	        end
+	    end
+	end
+	scatter!(p, feasible_x1, feasible_x2, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.8,
+	         label="")
+	
+	# Mark center of objective
+	scatter!(p, [1], [1], 
+	         markersize=8, 
+	         color=:purple, 
+	         markershape=:star,
+	         label="Center (1, 1)")
+	
+	# Plot selected point
+	point_color = is_feasible(x1_val_e2, x2_val_e2) ? :green : :red
+	scatter!(p, [x1_val_e2], [x2_val_e2], 
+	         markersize=10, 
+	         color=point_color, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f = ∇f(x1_val_e2, x2_val_e2)
+	scale = 0.2  # scale factor for gradient arrows
+	quiver!(p, [x1_val_e2], [x2_val_e2], 
+	        quiver=([scale*grad_f[1]], [scale*grad_f[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label="∇f")
+	
+	# Add annotation for ∇f
+	annotate!(p, x1_val_e2 + scale*grad_f[1], x2_val_e2 + scale*grad_f[2], 
+	          text(L"\nabla f = [%$(round(grad_f[1], digits=2)), %$(round(grad_f[2], digits=2))]", 
+	               :black, 9, :left))
+	
+	# Plot gradients of active constraints
+	active = active_constraints(x1_val_e2, x2_val_e2)
+	colors = [:red, :green, :orange]
+	
+	for (i, name, grad) in active
+		quiver!(p, [x1_val_e2], [x2_val_e2], 
+		        quiver=([scale*grad[1]], [scale*grad[2]]), 
+		        color=colors[i], 
+		        linewidth=3,
+		        arrow=:closed,
+		        label="∇g$i")
+		
+		# Add annotation for each active constraint gradient
+		annotate!(p, x1_val_e2 + scale*grad[1], x2_val_e2 + scale*grad[2], 
+		          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               colors[i], 9, :left))
+	end
+	
+	xlims!(p, -0.2, 2.0)
+	ylims!(p, -0.2, 2.0)
+	
+	p
+end
+
+# ╔═╡ dc71a49a-1e1f-474c-bfcd-cde361115ee1
+md"### Fritz John Optimality Conditions "
+
+# ╔═╡ 6d6428eb-9442-43a3-9cad-815b7ccfc203
+begin
+	x1_val_e3_html = @bind x1_val_e3 NumberField(0.0:0.01:3.0, default=1.5)
+
+	x2_val_e3_html = @bind x2_val_e3 NumberField(0.0:0.01:3.0, default=1.0)
+	cm"""
+
+	``x_1=`` $(x1_val_e3_html)
+	
+	``x_2=`` $(x2_val_e3_html)
+	
+	"""
+end
+
+# ╔═╡ e64e8a77-6b32-46ab-b126-f77c917935ad
+let
+	# Define the objective function
+	f(x1, x2) = (x1 - 3)^2 + (x2 - 2)^2
+	
+	# Gradient of objective function
+	∇f(x1, x2) = [2*(x1 - 3), 2*(x2 - 2)]
+	
+	# Constraint functions (written as g(x) ≤ 0)
+	g1(x1, x2) = x1^2 + x2^2 - 5       # circle constraint
+	g2(x1, x2) = x1 + 2*x2 - 4         # line constraint
+	g3(x1, x2) = -x1                   # x1 ≥ 0
+	g4(x1, x2) = -x2                   # x2 ≥ 0
+	
+	# Gradients of constraints
+	∇g1(x1, x2) = [2*x1, 2*x2]
+	∇g2(x1, x2) = [1, 2]
+	∇g3(x1, x2) = [-1, 0]
+	∇g4(x1, x2) = [0, -1]
+	
+	# Check which constraints are active (within tolerance)
+	tol = 0.1
+	function active_constraints(x1, x2)
+		active = []
+		if abs(g1(x1, x2)) < tol
+			push!(active, (1, "x₁² + x₂² ≤ 5", ∇g1(x1, x2)))
+		end
+		if abs(g2(x1, x2)) < tol
+			push!(active, (2, "x₁ + 2x₂ ≤ 4", ∇g2(x1, x2)))
+		end
+		if abs(g3(x1, x2)) < tol
+			push!(active, (3, "x₁ ≥ 0", ∇g3(x1, x2)))
+		end
+		if abs(g4(x1, x2)) < tol
+			push!(active, (4, "x₂ ≥ 0", ∇g4(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check if point is feasible
+	function is_feasible(x1, x2)
+		return g1(x1, x2) <= tol && g2(x1, x2) <= tol && 
+		       g3(x1, x2) <= tol && g4(x1, x2) <= tol
+	end
+
+	# Create the plot
+	x1_range = range(-0.5, 3.5, length=400)
+	x2_range = range(-0.5, 3.0, length=400)
+	
+	p = plot(size=(800, 800), aspect_ratio=:equal, 
+	         xlabel=L"x_1", ylabel=L"x_2", 
+	         title="Gradients at ($(round(x1_val_e3, digits=2)), $(round(x2_val_e3, digits=2)))",
+	         legend=:topright, legendfontsize=8,
+	         framestyle=:origin)
+	
+	# Plot contour curves of objective
+	contour!(p, x1_range, x2_range, 
+	         (x1, x2) -> f(x1, x2), 
+	         levels=15, 
+	         color=:viridis, 
+	         linewidth=1.5,
+	         alpha=0.5,
+	         colorbar=false,
+	         label="")
+	
+	# Plot constraint boundaries
+	# Circle: x₁² + x₂² = 5
+	θ = range(0, 2π, length=200)
+	circle_x1 = sqrt(5) .* cos.(θ)
+	circle_x2 = sqrt(5) .* sin.(θ)
+	plot!(p, circle_x1, circle_x2, 
+	      linewidth=2.5, color=:red, 
+	      label=L"x_1^2 + x_2^2 = 5", linestyle=:dash)
+	
+	# Line: x₁ + 2x₂ = 4
+	x1_line = range(-0.5, 4, length=100)
+	x2_line = (4 .- x1_line) ./ 2
+	plot!(p, x1_line, x2_line, 
+	      linewidth=2.5, color=:blue, 
+	      label=L"x_1 + 2x_2 = 4", linestyle=:dash)
+	
+	# Axes constraints (already shown by framestyle=:origin, but we can highlight the positive quadrant)
+	plot!(p, [0, 0], [-0.5, 3], 
+	      linewidth=2.5, color=:green, 
+	      label=L"x_1 = 0", linestyle=:dash, alpha=0.5)
+	plot!(p, [-0.5, 3.5], [0, 0], 
+	      linewidth=2.5, color=:orange, 
+	      label=L"x_2 = 0", linestyle=:dash, alpha=0.5)
+	
+	# Shade feasible region
+	x1_grid = range(0, 3, length=150)
+	x2_grid = range(0, 2.5, length=150)
+	feasible_x1 = Float64[]
+	feasible_x2 = Float64[]
+	for x1 in x1_grid
+	    for x2 in x2_grid
+	        if x1 >= 0 && x2 >= 0 && x1^2 + x2^2 <= 5 && x1 + 2*x2 <= 4
+	            push!(feasible_x1, x1)
+	            push!(feasible_x2, x2)
+	        end
+	    end
+	end
+	scatter!(p, feasible_x1, feasible_x2, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.9,
+	         label="")
+	
+	# Mark center of objective
+	scatter!(p, [3], [2], 
+	         markersize=8, 
+	         color=:purple, 
+	         markershape=:star,
+	         label="Center (3, 2)")
+	
+	# Plot selected point
+	point_color = is_feasible(x1_val_e3, x2_val_e3) ? :green : :red
+	scatter!(p, [x1_val_e3], [x2_val_e3], 
+	         markersize=10, 
+	         color=point_color, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f = ∇f(x1_val_e3, x2_val_e3)
+	scale = 0.3  # scale factor for gradient arrows
+	quiver!(p, [x1_val_e3], [x2_val_e3], 
+	        quiver=([scale*grad_f[1]], [scale*grad_f[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label=L"\nabla f")
+	
+	# Add annotation for ∇f
+	annotate!(p, x1_val_e3 + scale*grad_f[1] + 0.1, x2_val_e3 + scale*grad_f[2] + 0.1, 
+	          text(L"\nabla f = [%$(round(grad_f[1], digits=2)), %$(round(grad_f[2], digits=2))]", 
+	               :black, 8, :left))
+	
+	# Plot gradients of active constraints
+	active = active_constraints(x1_val_e3, x2_val_e3)
+	colors = [:red, :blue, :green, :orange]
+	
+	for (i, name, grad) in active
+		quiver!(p, [x1_val_e3], [x2_val_e3], 
+		        quiver=([scale*grad[1]], [scale*grad[2]]), 
+		        color=colors[i], 
+		        linewidth=3,
+		        arrow=:closed,
+		        label=L"\nabla g_%$i")
+		
+		# Add annotation for each active constraint gradient
+		offset_x = 0.1
+		offset_y = 0.1
+		annotate!(p, x1_val_e3 + scale*grad[1] + offset_x, 
+		          x2_val_e3 + scale*grad[2] + offset_y, 
+		          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               colors[i], 8, :left))
+	end
+	
+	xlims!(p, -0.5, 4.5)
+	ylims!(p, -0.5, 3.0)
+	
+	p
+end
+
+# ╔═╡ a60d5096-9152-44e0-b5d2-3bb789dcff5d
+
+begin
+	x1_val_e4_html = @bind x1_val_e4 NumberField(-0.5:0.01:2.0, default=0.5)
+	x2_val_e4_html = @bind x2_val_e4 NumberField(0.0:0.01:2.0, default=0.5)
+	cm"""
+	``x_1=`` $(x1_val_e4_html)
+	
+	``x_2=`` $(x2_val_e4_html)
+	
+	"""
+end
+
+
+# ╔═╡ b2cdd374-e06f-4d8f-9db1-6dfb7d661a40
+let
+	# Define the objective function
+	f_e4(x1, x2) = -x1
+	
+	# Gradient of objective function
+	∇f_e4(x1, x2) = [-1, 0]
+	
+	# Constraint functions (written as g(x) ≤ 0)
+	g1_e4(x1, x2) = x2 - (1 - x1)^3     # cubic constraint
+	g2_e4(x1, x2) = -x2                 # x2 ≥ 0
+	
+	# Gradients of constraints
+	∇g1_e4(x1, x2) = [3*(1 - x1)^2, 1]
+	∇g2_e4(x1, x2) = [0, -1]
+	
+	# Check which constraints are active (within tolerance)
+	tol_e4 = 0.1
+	function active_constraints_e4(x1, x2)
+		active = []
+		if abs(g1_e4(x1, x2)) < tol_e4
+			push!(active, (1, "x₂ - (1-x₁)³ ≤ 0", ∇g1_e4(x1, x2)))
+		end
+		if abs(g2_e4(x1, x2)) < tol_e4
+			push!(active, (2, "x₂ ≥ 0", ∇g2_e4(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check if point is feasible
+	function is_feasible_e4(x1, x2)
+		return g1_e4(x1, x2) <= tol_e4 && g2_e4(x1, x2) <= tol_e4
+	end
+
+	# Create the plot
+	x1_range_e4 = range(-0.5, 2.0, length=400)
+	x2_range_e4 = range(-0.2, 2.0, length=400)
+	
+	p_e4 = plot(size=(800, 800), aspect_ratio=:equal, 
+	         xlabel=L"x_1", ylabel=L"x_2", 
+	         title="Gradients at ($(round(x1_val_e4, digits=2)), $(round(x2_val_e4, digits=2)))",
+	         legend=:topright, legendfontsize=8,
+	         framestyle=:origin)
+	
+	# Plot contour curves of objective (vertical lines since f = -x₁)
+	for x1_contour in -0.5:0.2:2.0
+		plot!(p_e4, [x1_contour, x1_contour], [-0.2, 2.0],
+		      color=:gray, alpha=0.3, linewidth=1, label="")
+	end
+	
+	# Plot constraint boundaries
+	# Curve: x₂ = (1 - x₁)³
+	x1_curve = range(-0.5, 2.0, length=200)
+	x2_curve = (1 .- x1_curve).^3
+	plot!(p_e4, x1_curve, x2_curve, 
+	      linewidth=2.5, color=:red, 
+	      label=L"x_2 = (1-x_1)^3", linestyle=:dash)
+	
+	# Axis constraint x₂ = 0
+	plot!(p_e4, [-0.5, 2.0], [0, 0], 
+	      linewidth=2.5, color=:blue, 
+	      label=L"x_2 = 0", linestyle=:dash, alpha=0.5)
+	
+	# Shade feasible region
+	x1_grid_e4 = range(-0.5, 2.0, length=150)
+	x2_grid_e4 = range(0, 2.0, length=150)
+	feasible_x1_e4 = Float64[]
+	feasible_x2_e4 = Float64[]
+	for x1 in x1_grid_e4
+	    for x2 in x2_grid_e4
+	        if x2 >= 0 && x2 <= (1 - x1)^3
+	            push!(feasible_x1_e4, x1)
+	            push!(feasible_x2_e4, x2)
+	        end
+	    end
+	end
+	scatter!(p_e4, feasible_x1_e4, feasible_x2_e4, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.2,
+	         label="")
+	
+	# Plot selected point
+	point_color_e4 = is_feasible_e4(x1_val_e4, x2_val_e4) ? :green : :red
+	scatter!(p_e4, [x1_val_e4], [x2_val_e4], 
+	         markersize=10, 
+	         color=point_color_e4, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f_e4 = ∇f_e4(x1_val_e4, x2_val_e4)
+	scale_e4 = 0.4  # scale factor for gradient arrows
+	quiver!(p_e4, [x1_val_e4], [x2_val_e4], 
+	        quiver=([scale_e4*grad_f_e4[1]], [scale_e4*grad_f_e4[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label=L"\nabla f")
+	
+	# Add annotation for ∇f
+	annotate!(p_e4, x1_val_e4 + scale_e4*grad_f_e4[1] + 0.1, 
+	          x2_val_e4 + scale_e4*grad_f_e4[2] + 0.1, 
+	          text(L"\nabla f = [%$(round(grad_f_e4[1], digits=2)), %$(round(grad_f_e4[2], digits=2))]", 
+	               :black, 8, :left))
+	
+	# Plot gradients of active constraints
+	active_e4 = active_constraints_e4(x1_val_e4, x2_val_e4)
+	colors_e4 = [:red, :blue]
+	
+	for (i, name, grad) in active_e4
+		quiver!(p_e4, [x1_val_e4], [x2_val_e4], 
+		        quiver=([scale_e4*grad[1]], [scale_e4*grad[2]]), 
+		        color=colors_e4[i], 
+		        linewidth=3,
+		        arrow=:closed,
+		        label=L"\nabla g_%$i")
+		
+		# Add annotation for each active constraint gradient
+		offset_x = 0.1
+		offset_y = 0.1
+		annotate!(p_e4, x1_val_e4 + scale_e4*grad[1] + offset_x, 
+		          x2_val_e4 + scale_e4*grad[2] + offset_y, 
+		          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               colors_e4[i], 8, :left))
+	end
+	
+	xlims!(p_e4, -0.5, 2.0)
+	ylims!(p_e4, -0.2, 2.0)
+	
+	p_e4
+end
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -595,6 +1310,30 @@ ul li:before {
 
 # ╔═╡ fdd3c3e3-5089-456f-adef-7ab2e311331f
 begin
+	function min_latex_gi()
+	cm"""
+	```math
+	 \begin{array}{lll}
+	 \min & f(x) \\
+	 \text{subject to}\\
+	 & g_i(x)\leq 0 & i=1,\cdots,m\\
+	 & x \in X
+	 \end{array}
+	 ```
+	"""
+	end
+	
+	function min_latex()
+	cm"""
+	```math
+	\begin{array}{lll}
+	\min & f(x) \\
+	\text{subject to}\\
+	& x \in S\\
+	\end{array}
+	```
+	"""
+	end
     function add_space(n=1)
         repeat("&nbsp;", n)
     end
@@ -2357,6 +3096,231 @@ cm"""
 $(bth("4.1.6"))
 
 Let ``f: R \rightarrow R`` be an infinitely differentiable univariate function. Then ``\bar{x} \in R`` is a local minimum if and only if either ``f^{(j)}(\bar{x})=0`` for all ``j=1,2, \ldots``, or else there exists an even ``n \geq 2`` such that ``f^{(n)}(\bar{x})>0`` while ``f^{(j)}(\bar{x})=0`` for all ``1 \leq j < n``, where ``f^{(j)}`` denotes the ``j`` th-order derivative of ``f``.
+"""
+
+# ╔═╡ d478679e-e6a0-48cc-8119-7e822f26dd02
+min_P = min_latex();"";
+
+# ╔═╡ ee88be92-5954-4f41-9b6d-c1db938b7368
+cm"""
+$(define("Feasible Solutions"))
+Let ``S`` be a nonempty set in ``R^n``, and let ``\overline{\mathbf{x}} \in \mathrm{cl} S``. 
+
+The __cone of feasible directions__ of ``S`` at ``\overline{\mathbf{x}}``, denoted by ``D``, is given by
+```math
+D=\{\mathbf{d}: \mathbf{d} \neq \mathbf{0}, \text { and } \overline{\mathbf{x}}+\lambda \mathbf{d} \in S \text { for all } \lambda \in(0, \delta) \text { for some } \delta >0\} .
+```
+
+Each nonzero vector ``\mathbf{d} \in D`` is called a __feasible direction__. Moreover, given a function ``f: R^n \rightarrow R``, the __cone of improving directions__ at ``\overline{\mathbf{x}}``, denoted by ``F``, is given by
+```math
+F=\{\mathbf{d}: f(\overline{\mathbf{x}}+\lambda \mathbf{d}) < f(\overline{\mathbf{x}}) \text { for all } \lambda \in(0, \delta) \text { for some } \delta >0\} .
+```
+
+Each direction ``\mathbf{d} \in F`` is called an __improving direction__, or a __descent direction__, of ``f``
+"""
+
+# ╔═╡ 6a7ff171-88af-431f-9ee8-4724f8eff61d
+cm"""
+$(bth("4.2.2"))
+
+Consider the problem 
+
+$(min_P)
+
+where ``f: R^n \rightarrow R`` and ``S`` is a nonempty set in ``R^n``. Suppose that ``f`` is __differentiable__ at a point ``\overline{\mathbf{x}} \in S``. 
+
+If ``\overline{\mathbf{x}}`` is a local optimal solution, ``F_0 \cap D=\varnothing``, where 
+```math
+F_0=\left\{\mathbf{d}: \nabla f(\overline{\mathbf{x}})^t \mathbf{d}<0\right\}
+``` 
+and ``D`` is the cone of feasible directions of ``S`` at ``\overline{\mathbf{x}}``. 
+
+__Conversely__, suppose that ``F_0 \cap D=\varnothing``, ``f`` is pseudoconvex at ``\overline{\mathbf{x}}``, and that there exists an ``\varepsilon``-neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}}), \varepsilon>0``, such that ``\mathbf{d}=(\mathbf{x}-\overline{\mathbf{x}}) \in D`` for any ``\mathbf{x} \in S \cap N_{\varepsilon}(\overline{\mathbf{x}})``. Then ``\overline{\mathbf{x}}`` is a local minimum of ``f``.
+"""
+
+# ╔═╡ b14b538e-e980-4e49-b9e0-74b43fe4620b
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/rxxwly6y6btoagymgyvda/fig4.3.png?rlkey=022v1odr7s2m4nblnmko57bqw&dl=1"))
+"""
+
+# ╔═╡ 2eea535f-8ab5-434b-b685-71539f73f062
+cm"""
+$(bbl("Remarks",""))
+- ``F_0\subseteq F`` (Th 4.1.2).
+- If ``d\in F``, then we have to have 
+```math
+\nabla f(\mathbf{x})^td \leq 0.
+```
+- ``F_0 \subseteq F \subseteq F_0^{\prime}=\left\{\mathbf{d} \neq \mathbf{0}: \nabla f(\overline{\mathbf{x}})^t \mathbf{d} \leq 0\right\}``. 
+- The above inclusion can be __strict__. Meaning we may have ``\nabla f(\mathbf{x})^td=0``, and there might exist 
+directions of motion that give descent or ascent, or even hold the value of ``f`` 
+constant as we move away from ``\mathbf{x}``. 
+"""
+
+# ╔═╡ 8e1b7954-4159-4fd4-8c5a-2f1ac529e463
+cm"""
+$(bbl("Lemma","4.2.3"))
+
+Consider a differentiable function ``f: R^n \rightarrow R``, and let ``F, F_0, F_0^{\prime}`` be as defined above. 
+
+Then we have ``F_0 \subseteq F \subseteq F_0^{\prime}``. Moreover, if ``f`` is pseudoconvex at ``\overline{\mathbf{x}}, F=F_0``, and if ``f`` is strictly pseudoconcave at ``\overline{\mathbf{x}}, F=F_0^{\prime}``.
+"""
+
+# ╔═╡ 2f98c41a-3854-4a4a-b496-596d6f953d33
+cm"""
+$(bbl("Lemma","4.2.4"))
+
+Consider the feasible region 
+```math 
+S=\left\{\mathbf{x} \in X: g_i(\mathbf{x}) \leq 0\text{ for } i=1, \ldots, m\right\}, \text{ where } X \text{ is a nonempty open set in }\mathbb{R}^n
+``` 
+and where ``g_i: R^n \rightarrow R`` for ``i=1, \ldots, m``. 
+
+Given a feasible point ``\overline{\mathbf{x}} \in S``, let ``I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}`` be the index set for the __binding, or active, or tight constraints__, and assume that 
+- ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``. 
+
+Define the sets
+```math
+\begin{gathered}
+G_0=\left\{\mathbf{d}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d}<0 \text { for each } i \in I\right\} \\
+G_0^{\prime}=\left\{\mathbf{d} \neq \mathbf{0}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0 \text { for each } i \in I\right\}
+\end{gathered}
+```
+Then we have
+```math
+G_0 \subseteq D \subseteq G_0^{\prime}
+```
+
+Moreover, 
+- if ``g_i, i \in I``, are strictly pseudoconvex at ``\overline{\mathbf{x}}``, then ``D=G_0``; and 
+- if ``g_i, i \in I``, are pseudoconcave at ``\overline{\mathbf{x}}``, then ``D=G_0^{\prime}``.
+"""
+
+# ╔═╡ e4c10925-07a1-4aa8-a921-bba1f49976ba
+cm"""
+$(bth("4.2.5"))
+
+Consider Problem 
+
+$(min_latex_gi())
+
+where ``X`` is a nonempty open set in ``R^n, f: R^n \rightarrow R``, and ``g_i: R^n \rightarrow R``, for ``i =1, \ldots, m``. 
+
+Let ``\overline{\mathbf{x}}`` be a feasible point, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Furthermore, suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``. 
+
+If ``\overline{\mathbf{x}}`` is a __local optimal solution__, then
+```math 
+F_0 \cap G_0=\varnothing,
+```
+where
+```math
+\begin{array}{lcl}
+F_0=\left\{\mathbf{d}: \nabla f(\overline{\mathbf{x}})^t \mathbf{d}<0\right\}
+&\text{and}&G_0=\left\{\mathbf{d}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d}<0\right.\quad  \text{for each } \left.i \in I\right\}.
+\end{array}
+```
+
+__Conversely__, if 
+- ``F_0 \cap G_0=\varnothing``, and if 
+- ``f`` is pseudoconvex at ``\overline{\mathbf{x}}`` and 
+- ``g_i, i \in I``, are strictly pseudoconvex over some ``\varepsilon``-neighborhood of ``\overline{\mathbf{x}}``.
+
+Then ``\overline{\mathbf{x}}`` is a local minimum.
+"""
+
+# ╔═╡ 524c222e-f9e1-4421-88b0-072cb6b74d95
+cm"""
+$(bbl("Remarks",""))
+- Observe that under the __converse hypothesis__ of Theorem 4.2.5, and assuming that ``g_i, i \notin I``, are continuous at ``\overline{\mathbf{x}}``, we have, noting (4.9a),
+```math
+\overline{\mathbf{x}} \text { is a local minimum } \Leftrightarrow F_0 \cap D=\varnothing \Leftrightarrow F_0 \cap G_0=\varnothing .
+```
+- If ``\overline{\mathbf{x}}`` is a local minimum, then clearly we must have 
+```math 
+F \cap D=\varnothing.
+```
+- However, the __converse__ is not necessarily true. That is, if ``F \cap D=\varnothing``, this does not necessarily imply that ``\overline{\mathbf{x}}`` is a local minimum. 
+"""
+
+# ╔═╡ f68e53bc-5c85-4b4b-95b7-d94af1a7f124
+cm"""
+$(ex("Example","4.2.6"))
+```math
+\begin{aligned}
+\operatorname{Minimize}\left(x_1-3\right)^2 & +\left(x_2-2\right)^2 \\
+\text { subject to } x_1^2+x_2^2 & \leq 5 \\
+x_1+x_2 & \leq 3 \\
+x_1 & \geq 0 \\
+x_2 & \geq 0 .
+\end{aligned}
+```
+"""
+
+# ╔═╡ ee994ad9-5fc9-4722-9201-536996e19b4c
+cm"""
+$(bth("4.2.8(Fritz John Necessary Conditions)"))
+
+Let ``X`` be a nonempty open set in ``\mathbb{R}^n`` and let ``f: \mathbb{R}^n \rightarrow R``, and ``g_i: \mathbb{R}^n \rightarrow R`` for ``i= 1, \ldots, m``.
+
+Consider Problem P 
+
+$(min_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __feasible solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Furthermore, suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``. 
+
+If ``\overline{\mathbf{x}}`` solves Problem P locally, there exist scalars ``u_0`` and ``u_i`` for ``i \in I`` such that
+```math
+\begin{aligned}
+u_0 \nabla f(\overline{\mathbf{x}})+\sum_{i \in I} u_i \nabla g_i(\overline{\mathbf{x}}) & =0 \\
+u_0, u_i & \geq 0, \quad \text { for } i \in I \\
+\left(u_0, \mathbf{u}_I\right) & \neq(0, \mathbf{0}), 
+\end{aligned}
+```
+where ``\mathbf{u}_I`` is the vector whose components are ``u_i`` for ``i \in I``. Furthermore, if ``g_i`` for ``i \notin I`` are also differentiable at ``\overline{\mathbf{x}}``, the foregoing conditions can be written in the following equivalent form:
+```math
+\begin{aligned}
+u_0 \nabla f(\overline{\mathbf{x}})+\sum_{i=1}^m u_i \nabla g_i(\overline{\mathbf{x}}) & =\mathbf{0} & & \\
+u_i g_i(\overline{\mathbf{x}}) & =0 & & \text { for } i=1, \ldots, m \\
+u_0, u_i & \geq 0 & & \text { for } i=1, \ldots, m \\
+\left(u_0, \mathbf{u}\right) & \neq(0, \mathbf{0}), & &
+\end{aligned}
+```
+where ``\mathbf{u}`` is the vector whose components are ``u_i`` for ``i=1, \ldots, m``.
+"""
+
+# ╔═╡ 5196f462-29fe-4f16-8e8d-c9b233a7dca8
+cm"""
+$(ex("Example","4.2.9"))
+```math
+\begin{aligned}
+\operatorname{Minimize}\left(x_1-3\right)^2 & +\left(x_2-2\right)^2 \\
+\text { subject to } x_1^2+x_2^2 & \leq 5 \\
+x_1+2 x_2 & \leq 4 \\
+-x_1 & \leq 0 \\
+-x_2 & \leq 0
+\end{aligned}
+```
+"""
+
+# ╔═╡ b7f2b3d3-8aa5-4a1e-97e5-a10f17aebbaf
+cm"""
+$(ex("Example","4.2.10 "))
+```math
+\begin{aligned} & \operatorname{Minimize}-x_1 \\ & \text { subject to } x_2-\left(1-x_1\right)^3 \leq 0 \\ & -x_2 \leq 0\end{aligned}
+```
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -4243,7 +5207,32 @@ version = "1.8.1+0"
 # ╟─b6809792-4885-4bdd-9dea-d4e93ebe68c6
 # ╟─563d0e84-e2f3-49fe-b92e-6c0716ed8523
 # ╟─010e228c-7590-4178-99b6-bb50819dfe1c
-# ╠═807a80ef-2c20-400d-85b6-9fc71d21b5b8
+# ╟─807a80ef-2c20-400d-85b6-9fc71d21b5b8
+# ╟─d478679e-e6a0-48cc-8119-7e822f26dd02
+# ╟─72ccae91-7342-4780-92c6-b226ce13507c
+# ╟─ff54a546-4bd6-4d6e-9ea7-f4053635dc42
+# ╟─ee88be92-5954-4f41-9b6d-c1db938b7368
+# ╟─6a7ff171-88af-431f-9ee8-4724f8eff61d
+# ╟─b14b538e-e980-4e49-b9e0-74b43fe4620b
+# ╟─2eea535f-8ab5-434b-b685-71539f73f062
+# ╟─8e1b7954-4159-4fd4-8c5a-2f1ac529e463
+# ╟─1391def6-0a0d-4e16-abbe-3644e56cab9b
+# ╟─2f98c41a-3854-4a4a-b496-596d6f953d33
+# ╟─e4c10925-07a1-4aa8-a921-bba1f49976ba
+# ╟─524c222e-f9e1-4421-88b0-072cb6b74d95
+# ╟─f68e53bc-5c85-4b4b-95b7-d94af1a7f124
+# ╟─4719b6e7-4eba-43a4-8b8d-3bdf3a46712f
+# ╠═10754f5c-e457-47a5-91d6-5f6ed203cda8
+# ╠═8f24c28e-57bd-42ae-9883-1cebc0715a0c
+# ╠═93a35971-c2eb-4dd3-bd66-b3335400861d
+# ╟─dc71a49a-1e1f-474c-bfcd-cde361115ee1
+# ╟─ee994ad9-5fc9-4722-9201-536996e19b4c
+# ╟─5196f462-29fe-4f16-8e8d-c9b233a7dca8
+# ╟─6d6428eb-9442-43a3-9cad-815b7ccfc203
+# ╠═e64e8a77-6b32-46ab-b126-f77c917935ad
+# ╟─b7f2b3d3-8aa5-4a1e-97e5-a10f17aebbaf
+# ╟─a60d5096-9152-44e0-b5d2-3bb789dcff5d
+# ╠═b2cdd374-e06f-4d8f-9db1-6dfb7d661a40
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
