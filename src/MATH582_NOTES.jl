@@ -1284,6 +1284,439 @@ let
 	p_e4
 end
 
+# ╔═╡ 9197b26f-59a7-4508-82f7-8441bea7a2e1
+md"### Karush-Kuhn-Tucker Conditions "
+
+# ╔═╡ f1b16a2c-816a-4a31-aff2-f8f10ca45cc9
+cm"""
+> If we require that ``u_0 > 0``, in FJ conditions, we obtain the so called __KKT__ conditions.
+"""
+
+# ╔═╡ 4699162f-ef6a-4279-9aa7-56170fa9a6ff
+begin
+	x1_val_e5_html = @bind x1_val_e5 NumberField(-0.5:0.01:2.0, default=0.5)
+	x2_val_e5_html = @bind x2_val_e5 NumberField(0.0:0.01:2.0, default=0.5)
+	cm"""
+	``x_1=`` $(x1_val_e5_html)
+	
+	``x_2=`` $(x2_val_e5_html)
+	
+	"""
+end
+
+
+
+# ╔═╡ 7ed6becd-1e79-4103-950a-017d187c585c
+begin
+	# Define the objective function
+	f_e5(x1, x2) = -x1
+	
+	# Gradient of objective function
+	∇f_e5(x1, x2) = [-1, 0]
+	
+	# Constraint functions (written as g(x) ≤ 0)
+	g1_e5(x1, x2) = x1 + x2 - 1     # linear constraint
+	g2_e5(x1, x2) = -x2              # x2 ≥ 0
+	
+	# Gradients of constraints
+	∇g1_e5(x1, x2) = [1, 1]
+	∇g2_e5(x1, x2) = [0, -1]
+	
+	# Check which constraints are active (within tolerance)
+	tol_e5 = 0.1
+	function active_constraints_e5(x1, x2)
+		active = []
+		if abs(g1_e5(x1, x2)) < tol_e5
+			push!(active, (1, "x₁ + x₂ - 1 ≤ 0", ∇g1_e5(x1, x2)))
+		end
+		if abs(g2_e5(x1, x2)) < tol_e5
+			push!(active, (2, "x₂ ≥ 0", ∇g2_e5(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check if point is feasible
+	function is_feasible_e5(x1, x2)
+		return g1_e5(x1, x2) <= tol_e5 && g2_e5(x1, x2) <= tol_e5
+	end
+
+	# Create the plot
+	x1_range_e5 = range(-0.5, 2.0, length=400)
+	x2_range_e5 = range(-0.2, 2.0, length=400)
+	
+	p_e5 = plot(size=(800, 800), aspect_ratio=:equal, 
+	         xlabel=L"x_1", ylabel=L"x_2", 
+	         title="Gradients at ($(round(x1_val_e5, digits=2)), $(round(x2_val_e5, digits=2)))",
+	         legend=:topright, legendfontsize=8,
+	         framestyle=:origin)
+	
+	# Plot contour curves of objective (vertical lines since f = -x₁)
+	for x1_contour in -0.5:0.2:2.0
+		plot!(p_e5, [x1_contour, x1_contour], [-0.2, 2.0],
+		      color=:gray, alpha=0.3, linewidth=1, label="")
+	end
+	
+	# Plot constraint boundaries
+	# Line: x₁ + x₂ = 1
+	x1_line_e5 = range(-0.5, 2.0, length=100)
+	x2_line_e5 = 1 .- x1_line_e5
+	plot!(p_e5, x1_line_e5, x2_line_e5, 
+	      linewidth=2.5, color=:red, 
+	      label=L"x_1 + x_2 = 1", linestyle=:dash)
+	
+	# Axis constraint x₂ = 0
+	plot!(p_e5, [-0.5, 2.0], [0, 0], 
+	      linewidth=2.5, color=:blue, 
+	      label=L"x_2 = 0", linestyle=:dash, alpha=0.5)
+	
+	# Shade feasible region
+	x1_grid_e5 = range(-0.5, 2.0, length=150)
+	x2_grid_e5 = range(0, 2.0, length=150)
+	feasible_x1_e5 = Float64[]
+	feasible_x2_e5 = Float64[]
+	for x1 in x1_grid_e5
+	    for x2 in x2_grid_e5
+	        if x2 >= 0 && x1 + x2 <= 1
+	            push!(feasible_x1_e5, x1)
+	            push!(feasible_x2_e5, x2)
+	        end
+	    end
+	end
+	scatter!(p_e5, feasible_x1_e5, feasible_x2_e5, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.2,
+	         label="")
+	
+	# Plot selected point
+	point_color_e5 = is_feasible_e5(x1_val_e5, x2_val_e5) ? :green : :red
+	scatter!(p_e5, [x1_val_e5], [x2_val_e5], 
+	         markersize=10, 
+	         color=point_color_e5, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f_e5 = ∇f_e5(x1_val_e5, x2_val_e5)
+	scale_e5 = 0.4  # scale factor for gradient arrows
+	quiver!(p_e5, [x1_val_e5], [x2_val_e5], 
+	        quiver=([scale_e5*grad_f_e5[1]], [scale_e5*grad_f_e5[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label=L"\nabla f")
+	
+	# Add annotation for ∇f
+	annotate!(p_e5, x1_val_e5 + scale_e5*grad_f_e5[1] - 0.15, 
+	          x2_val_e5 + scale_e5*grad_f_e5[2] + 0.15, 
+	          text(L"\nabla f = [%$(round(grad_f_e5[1], digits=2)), %$(round(grad_f_e5[2], digits=2))]", 
+	               :black, 8, :left))
+	
+	# Plot gradients of active constraints
+	active_e5 = active_constraints_e5(x1_val_e5, x2_val_e5)
+	colors_e5 = [:red, :blue]
+	
+	for (i, name, grad) in active_e5
+		quiver!(p_e5, [x1_val_e5], [x2_val_e5], 
+		        quiver=([scale_e5*grad[1]], [scale_e5*grad[2]]), 
+		        color=colors_e5[i], 
+		        linewidth=3,
+		        arrow=:closed,
+		        label=L"\nabla g_%$i")
+		
+		# Add annotation for each active constraint gradient
+		offset_x = 0.1
+		offset_y = 0.1
+		annotate!(p_e5, x1_val_e5 + scale_e5*grad[1] + offset_x, 
+		          x2_val_e5 + scale_e5*grad[2] + offset_y, 
+		          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               colors_e5[i], 8, :left))
+	end
+	
+	xlims!(p_e5, -0.5, 2.0)
+	ylims!(p_e5, -1, 2.0)
+	
+	p_e5
+end
+
+# ╔═╡ b06c5711-3f32-4514-a44d-e3aef2e69125
+cm"""
+__Information about the selected point__
+
+**Point:** ($(round(x1_val_e5, digits=3)), $(round(x2_val_e5, digits=3)))
+
+**Feasible:** $(is_feasible_e5(x1_val_e5, x2_val_e5) ? "✓ Yes" : "✗ No")
+
+**Objective value:** f = $(round(f_e5(x1_val_e5, x2_val_e5), digits=3))
+
+**Gradient of f:** ∇f = [$(round(∇f_e5(x1_val_e5, x2_val_e5)[1], digits=3)), $(round(∇f_e5(x1_val_e5, x2_val_e5)[2], digits=3))]
+
+**Constraint values:**
+- g₁ (line): $(round(g1_e5(x1_val_e5, x2_val_e5), digits=3)) $(g1_e5(x1_val_e5, x2_val_e5) <= 0 ? "✓" : "✗")
+- g₂ (x₂≥0): $(round(g2_e5(x1_val_e5, x2_val_e5), digits=3)) $(g2_e5(x1_val_e5, x2_val_e5) <= 0 ? "✓" : "✗")
+
+**Active constraints:** $(length(active_constraints_e5(x1_val_e5, x2_val_e5)) > 0 ? join([name for (i, name, grad) in active_constraints_e5(x1_val_e5, x2_val_e5)], ", ") : "None")
+"""
+
+
+# ╔═╡ 2d7d967e-bd11-4959-978e-2325f1b78f95
+md"""
+__KKT Conditions Check__
+
+For a point to be optimal, it must satisfy the KKT conditions:
+1. **Stationarity:** ∇f + Σλᵢ∇gᵢ = 0 (for active constraints)
+2. **Primal feasibility:** All constraints satisfied
+3. **Dual feasibility:** λᵢ ≥ 0
+4. **Complementary slackness:** λᵢ·gᵢ = 0
+
+**Key Observations:**
+- The objective f = -x₁ is minimized by making x₁ as large as possible
+- The gradient ∇f = [-1, 0] always points left (direction of steepest decrease)
+- The feasible region is a triangle bounded by x₁ + x₂ ≤ 1 and x₂ ≥ 0
+
+**Try these interesting points:**
+- **(1.0, 0.0)** - The optimal point! Both constraints are active here
+- **(0.5, 0.5)** - On the line x₁ + x₂ = 1
+- **(0.0, 0.0)** - At the origin
+- **(0.0, 1.0)** - On the line, at the other endpoint
+
+**At the optimal point (1, 0):**
+- Both constraints are active: g₁ = 0 and g₂ = 0
+- ∇f = [-1, 0]
+- ∇g₁ = [1, 1]
+- ∇g₂ = [0, -1]
+- The KKT stationarity condition: ∇f + λ₁∇g₁ + λ₂∇g₂ = 0
+- This gives: [-1, 0] + λ₁[1, 1] + λ₂[0, -1] = [0, 0]
+- Solution: λ₁ = 1, λ₂ = -1
+- But λ₂ < 0 violates dual feasibility! This means **the KKT conditions fail at (1,0)** even though it's the optimal point.
+- However, if we only consider g₁ as active, we get: [-1, 0] + λ₁[1, 1] = [0, 0], which has no solution with λ₁ ≥ 0.
+- The actual optimal point considering both constraints properly is still (1, 0), and this illustrates how constraint qualifications matter!
+"""
+
+# ╔═╡ cefc755f-2302-4213-8836-04ff8e33305d
+md"### Geometric Interpretation of the KKT Conditions: Linear Programming Approximations "
+
+# ╔═╡ 2e8796d7-06b4-467e-b295-1019d34859bf
+begin
+	x1_val_e12_html = @bind x1_val_e12 NumberField(0.0:0.01:2.5, default=1.0)
+	x2_val_e12_html = @bind x2_val_e12 NumberField(-2.0:0.01:2.0, default=0.0)
+	cm"""
+	**Select a point to analyze:**
+	
+	``x_1=`` $(x1_val_e12_html)
+	
+	``x_2=`` $(x2_val_e12_html)
+	"""
+end
+
+# ╠═╡ functions
+
+# ╔═╡ 9389bae8-5492-4402-ac8a-fccadfd8351e
+let
+	# Objective function: f(x) = x₁
+	f(x1, x2) = x1
+	
+	# Gradient of objective: ∇f = [1, 0]
+	∇f(x1, x2) = [1.0, 0.0]
+	
+	# Constraints in form g(x) ≤ 0
+	# g₁: (x₁-1)² + (x₂-1)² - 1 ≤ 0
+	g1(x1, x2) = (x1 - 1)^2 + (x2 - 1)^2 - 1
+	
+	# g₂: (x₁-1)² + (x₂+1)² - 1 ≤ 0
+	g2(x1, x2) = (x1 - 1)^2 + (x2 + 1)^2 - 1
+	
+	# Gradients of constraints
+	∇g1(x1, x2) = [2*(x1 - 1), 2*(x2 - 1)]
+	∇g2(x1, x2) = [2*(x1 - 1), 2*(x2 + 1)]
+	
+	# Tolerance for detecting active constraints
+	tol = 0.1
+	
+	# Check which constraints are active
+	function active_constraints(x1, x2)
+		active = []
+		if abs(g1(x1, x2)) < tol
+			push!(active, (1, "(x₁-1)² + (x₂-1)² ≤ 1", ∇g1(x1, x2)))
+		end
+		if abs(g2(x1, x2)) < tol
+			push!(active, (2, "(x₁-1)² + (x₂+1)² ≤ 1", ∇g2(x1, x2)))
+		end
+		return active
+	end
+	
+	# Check feasibility
+	function is_feasible(x1, x2)
+		return g1(x1, x2) <= tol && g2(x1, x2) <= tol
+	end
+
+	# Setup plot ranges
+	x1_range = range(-0.5, 2.5, length=400)
+	x2_range = range(-2.5, 2.5, length=400)
+	
+	p = plot(size=(800, 800), aspect_ratio=:equal, 
+	         xlabel=L"x_1", ylabel=L"x_2", 
+	         title="Gradients at ($(round(x1_val_e12, digits=2)), $(round(x2_val_e12, digits=2)))",
+	         legend=:topright, legendfontsize=8,
+	         framestyle=:origin)
+	
+	# Plot contour lines of objective f = x₁
+	# For linear objective, draw vertical lines (iso-cost lines)
+	for x1_contour in 0.0:0.2:2.0
+		plot!(p, [x1_contour, x1_contour], [-2.5, 2.5],
+		      color=:gray, alpha=0.3, linewidth=1, label="")
+	end
+	
+	# Plot first circle boundary: (x₁-1)² + (x₂-1)² = 1
+	θ1 = range(0, 2π, length=200)
+	circle1_x1 = 1.0 .+ cos.(θ1)
+	circle1_x2 = 1.0 .+ sin.(θ1)
+	plot!(p, circle1_x1, circle1_x2, 
+	      linewidth=2.5, color=:red, 
+	      label=L"(x_1-1)^2 + (x_2-1)^2 = 1", linestyle=:dash)
+	
+	# Plot second circle boundary: (x₁-1)² + (x₂+1)² = 1
+	θ2 = range(0, 2π, length=200)
+	circle2_x1 = 1.0 .+ cos.(θ2)
+	circle2_x2 = -1.0 .+ sin.(θ2)
+	plot!(p, circle2_x1, circle2_x2, 
+	      linewidth=2.5, color=:blue, 
+	      label=L"(x_1-1)^2 + (x_2+1)^2 = 1", linestyle=:dash)
+	
+	# Shade feasible region (intersection of both circles)
+	x1_grid = range(-0.5, 2.5, length=150)
+	x2_grid = range(-2.5, 2.5, length=150)
+	feasible_x1 = Float64[]
+	feasible_x2 = Float64[]
+	
+	for x1 in x1_grid
+	    for x2 in x2_grid
+	        if g1(x1, x2) <= 0 && g2(x1, x2) <= 0
+	            push!(feasible_x1, x1)
+	            push!(feasible_x2, x2)
+	        end
+	    end
+	end
+	
+	scatter!(p, feasible_x1, feasible_x2, 
+	         markersize=1, 
+	         markerstrokewidth=0,
+	         color=:lightblue, 
+	         alpha=0.3,
+	         label="Feasible region")
+	
+	# Mark the centers of the circles
+	scatter!(p, [1], [1], 
+	         markersize=6, 
+	         color=:red, 
+	         markershape=:x,
+	         label="Center (1,1)")
+	
+	scatter!(p, [1], [-1], 
+	         markersize=6, 
+	         color=:blue, 
+	         markershape=:x,
+	         label="Center (1,-1)")
+	
+	# Mark the optimal point (1, 0)
+	scatter!(p, [1], [0], 
+	         markersize=8, 
+	         color=:gold, 
+	         markershape=:star5,
+	         markerstrokewidth=2,
+	         markerstrokecolor=:black,
+	         label="Optimal (1,0)")
+	
+	# Plot selected point
+	point_color = is_feasible(x1_val_e12, x2_val_e12) ? :green : :red
+	scatter!(p, [x1_val_e12], [x2_val_e12], 
+	         markersize=10, 
+	         color=point_color, 
+	         markershape=:circle,
+	         markerstrokewidth=3,
+	         markerstrokecolor=:black,
+	         label="Selected point")
+	
+	# Plot gradient of objective function
+	grad_f = ∇f(x1_val_e12, x2_val_e12)
+	scale = 0.4
+	
+	quiver!(p, [x1_val_e12], [x2_val_e12], 
+	        quiver=([scale*grad_f[1]], [scale*grad_f[2]]), 
+	        color=:black, 
+	        linewidth=3,
+	        arrow=:closed,
+	        label=L"\nabla f")
+	
+	annotate!(p, x1_val_e12 + scale*grad_f[1] + 0.15, 
+	          x2_val_e12 + scale*grad_f[2] + 0.15, 
+	          text(L"\nabla f = [1, 0]", 
+	               :black, 8, :left))
+	
+	# Plot gradients of active constraints
+	active = active_constraints(x1_val_e12, x2_val_e12)
+	colors = [:red, :blue, :green, :orange]
+	
+	for (i, name, grad) in active
+		# Normalize gradient for visualization if needed
+		grad_norm = norm(grad)
+		if grad_norm > 0.01  # Avoid division by very small numbers
+			quiver!(p, [x1_val_e12], [x2_val_e12], 
+			        quiver=([scale*grad[1]], [scale*grad[2]]), 
+			        color=colors[i], 
+			        linewidth=3,
+			        arrow=:closed,
+			        label=L"\nabla g_%$i")
+			
+			# Add annotation
+			offset_x = 0.15
+			offset_y = 0.15
+			annotate!(p, x1_val_e12 + scale*grad[1] + offset_x, 
+			          x2_val_e12 + scale*grad[2] + offset_y, 
+			          text(L"\nabla g_%$i = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+			               colors[i], 8, :left))
+		end
+	end
+	
+	xlims!(p, -0.5, 3.5)
+	ylims!(p, -2.5, 2.5)
+
+cm"""
+$p
+	
+**Point:** ($(round(x1_val_e12, digits=3)), $(round(x2_val_e12, digits=3)))
+
+**Feasible:** $(is_feasible(x1_val_e12, x2_val_e12) ? "✓ Yes" : "✗ No")
+
+**Objective value:** f = $(round(f(x1_val_e12, x2_val_e12), digits=3))
+
+**Gradient of f:** ∇f = [1, 0] (constant, points in direction of increasing x₁)
+
+**Constraint values:**
+- g₁ (upper circle): $(round(g1(x1_val_e12, x2_val_e12), digits=3)) $(g1(x1_val_e12, x2_val_e12) <= 0 ? "✓" : "✗")
+- g₂ (lower circle): $(round(g2(x1_val_e12, x2_val_e12), digits=3)) $(g2(x1_val_e12, x2_val_e12) <= 0 ? "✓" : "✗")
+
+**Active constraints:** $(length(active_constraints(x1_val_e12, x2_val_e12)) > 0 ? join([name for (i, name, grad) in active_constraints(x1_val_e12, x2_val_e12)], ", ") : "None")
+
+---
+
+### Gradient Information
+
+**∇g₁ at this point:** [$(round(∇g1(x1_val_e12, x2_val_e12)[1], digits=3)), $(round(∇g1(x1_val_e12, x2_val_e12)[2], digits=3))]
+
+**∇g₂ at this point:** [$(round(∇g2(x1_val_e12, x2_val_e12)[1], digits=3)), $(round(∇g2(x1_val_e12, x2_val_e12)[2], digits=3))]
+
+"""
+end
+
+# ╠═╡ info
+
+# ╔═╡ c6554735-c50a-4c61-a9ef-95dd3956b99e
+
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -1332,6 +1765,15 @@ begin
 	& x \in S\\
 	\end{array}
 	```
+	"""
+	end
+	function indent(txt::String, ch::Int)
+	"""
+	<div style="padding-left:$(ch)ch;">
+
+		$(txt)
+
+	</div>
 	"""
 	end
     function add_space(n=1)
@@ -3323,6 +3765,259 @@ $(ex("Example","4.2.10 "))
 ```
 """
 
+# ╔═╡ 10f03ebd-0da6-4ecf-afdd-e524a9ddf530
+cm"""
+$(bth("4.2.12 (Fritz John Sufficient Conditions)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``g_i: R^n \rightarrow R`` for ``i= 1, \ldots, m``. 
+Consider Problem P
+
+$(min_latex_gi())
+
+
+Let ``\overline{\mathbf{x}}`` be a FJ solution and denote 
+```math 
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+
+Define ``S`` as the relaxed feasible region for Problem ``P`` in which the nonbinding constraints are dropped.
+
+- __(a)__ If there exists an ``\varepsilon``-neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}}), \varepsilon>0``, such that 
+   - ``f`` is pseudoconvex over ``N_{\mathcal{E}}(\overline{\mathbf{x}}) \cap S``, and 
+   - ``g_i, i \in I``, are strictly pseudoconvex over ``N_{\varepsilon}(\overline{\mathbf{x}}) \cap S``. 
+
+$(add_space(10)) Then ``\overline{\mathbf{x}}`` is a __local minimum for Problem P__.
+
+- __(b)__ If 
+   - ``f`` is pseudoconvex at ``\overline{\mathbf{x}}``, and if 
+   - ``g_i, i \in I``, are both strictly pseudoconvex and quasiconvex at ``\overline{\mathbf{x}}``. 
+
+$(add_space(10))Then ``\overline{\mathbf{x}}`` is a __global optimal solution for Problem P__. 
+
+<div style="padding-left:4ch;">
+
+In particular, if these generalized convexity assumptions hold true only by restricting the domain of ``f`` to ``N_{\varepsilon}(\overline{\mathbf{x}})`` for some ``\varepsilon> 0, \overline{\mathbf{x}}`` is a local minimum for Problem P .
+</div>
+"""
+
+# ╔═╡ 75d8b9f6-8d89-49b9-b8a4-e7cbbd066a31
+cm"""
+$(bbl("Remarks","Issues"))
+
+- ``\overline{x}`` is an FJ point ``\Longleftrightarrow`` ``F_0\cap G_0 = \varnothing``.
+
+$(post_img("https://www.dropbox.com/scl/fi/bk367fwcohea2rm1pk1bl/fig4.9.png?rlkey=8d1eny6oybrjfr6zsfakt1tb4&dl=1"))
+"""
+
+# ╔═╡ fd688b17-447f-4aa6-8584-20b04ef1f822
+cm"""
+$(ex("Example", "LP"))
+
+Minimize -x₁
+
+Subject to:
+- x₁ + x₂ - 1 ≤ 0
+- x₂ ≥ 0
+
+Enter values to select a point and see the gradients!
+
+## Select a point (x₁, x₂)
+
+"""
+
+# ╔═╡ 1791db8c-eb23-450c-b79d-82124a027cee
+cm"""
+$(bbl("Constraint Qualification (CQ)"))
+
+A __(CQ)__ is an assumption made about constraint functions (equality and inequality) that, when satisfied at a local minimizer ``\overline{x}``, ensures that ``\overline{x}`` is a KKT point.
+
+For example ``G_0\neq \varnothing`` is (CQ).
+"""
+
+# ╔═╡ 2b18aae5-24c1-4f3b-8926-9993c3f47db2
+cm"""
+$(bth("4.2.13 (Karush-Kuhn-Tucker Necessary Conditions)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``g_i: R^n \rightarrow R`` for ``i= 1, \ldots, m``. Consider the Problem P 
+$(min_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __feasible solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``.
+
+Furthermore, suppose that 
+```math
+\nabla g_i(\overline{\mathbf{x}}) \text{ for } i \in I \text{ are linearly independent}.\qquad (CQ')
+```
+
+If ``\overline{\mathbf{x}}`` solves Problem P locally, there exist scalars ``u_i`` for ``i \in I`` such that
+```math
+\begin{aligned}
+\nabla f(\overline{\mathbf{x}})+\sum_{i \in I} u_i \nabla g_i(\overline{\mathbf{x}}) & =0 \\
+u_i & \geq 0 \quad \text { for } i \in I .
+\end{aligned}
+```
+
+In addition to the above assumptions, if ``g_i`` for each ``i \notin I`` is also differentiable at ``\overline{\mathbf{x}}``, the foregoing conditions can be written in the following equivalent form:
+```math
+\begin{aligned}
+\nabla f(\overline{\mathbf{x}})+\sum_{i=1}^m u_i \nabla g_i(\overline{\mathbf{x}}) & =0 & & \\
+u_i g_i(\overline{\mathbf{x}}) & =0 & & \text { for } i=1, \ldots, m \\
+u_i & \geq 0 & & \text { for } i=1, \ldots, m
+\end{aligned}
+```
+"""
+
+# ╔═╡ 55c127e9-9647-4f9f-b9fd-4d9752071a90
+cm"""
+$(bbl("Remarks",""))
+- Together, these PF, DF, and CS conditions are called the __KKT conditions__. 
+- Any point ``\overline{x}`` for which there exist Lagrangian (or Lagrange) multipliers ``\overline{u}`` such that ``(\overline{x},\overline{u})`` 
+satisfies the KKT conditions is called a __KKT point__.
+"""
+
+# ╔═╡ 38143cd0-3552-4083-954a-bb10efb8c090
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/way294o6eux2ak3qrduuy/fig4.10.png?rlkey=jvrcim4ig2tsr25w001119rh0&dl=1"))
+"""
+
+# ╔═╡ 1552ddcb-1e1d-43de-a9e3-f4a7c186970b
+cm"""
+$(bbl("4.2.15 (KKT Conditions and First-Order LP Approximations)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``g_i: R^n \rightarrow R, i=1, \ldots``, ``m`` be differentiable functions. 
+Consider Problem P , 
+$(min_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a feasible solution, and denote ``I =\left\{i: g_i(\overline{\mathbf{x}})=0\right\}``. 
+
+Define 
+```math
+F_0=\left\{\mathbf{d}: \nabla f(\overline{\mathbf{x}})^t \mathbf{d}<0\right\}
+``` 
+and 
+```math
+G_0^{\prime}=\left\{\mathbf{d} \neq \mathbf{0}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0\right., \text{ for each  }i \in I\}
+``` 
+as before, and let 
+```math
+G^{\prime}=\left\{\mathbf{d}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0\right. \text{ for each } \left.i \in I\right\}= G_0^{\prime} \cup\{\mathbf{0}\}.
+```
+Then ``\overline{\mathbf{x}}`` is a KKT solution if and only if ``F_0 \cap G^{\prime}=\varnothing``, which is equivalent to ``F_0 \cap G_0^{\prime}=\varnothing``. Furthermore, consider the first-order linear programming approximation to Problem P:
+```math
+\begin{gathered}
+\operatorname{LP}(\overline{\mathbf{x}}): \operatorname{Minimize}\left\{f(\overline{\mathbf{x}})+\nabla f(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}): g_i(\overline{\mathbf{x}})+\nabla g_i(\overline{\mathbf{x}})^t(\mathbf{x}-\overline{\mathbf{x}}) \leq 0\right. \\
+\text { for } i=1, \ldots, m\} .
+\end{gathered}
+```
+
+Then, ``\overline{\mathbf{x}}`` is a KKT solution if and only if ``\overline{\mathbf{x}}`` solves ``\mathrm{LP}(\overline{\mathbf{x}})``.
+"""
+
+# ╔═╡ bccbbf3a-1cf3-41e2-bc0d-b32e122421ec
+cm"""
+$(bbl("Proof","First Part"))
+
+```math
+\text{A feasible solution } x \text{ is a KKT point iff there exist multipliers } 
+\{u_i,\, i \in J\} 
+\text{ satisfying:}
+```
+```math
+\sum_{i \in J} u_i \nabla g_i(x) = -\nabla f(x), \quad u_i \ge 0 \ \forall i \in J.
+```
+
+By Farkas’s Lemma (see, e.g., Corollary 2 to Theorem 2.7.3), this holds true if and only if there does **not** exist a vector \( d \) such that:
+```math
+\nabla g_i(x)^{T} d < 0 \quad \forall i \in J, 
+\quad \text{and} \quad 
+\nabla f(x)^{T} d < 0.
+```
+
+Hence, \( x \) is a KKT point if and only if 
+```math
+F_y \cap G' = \emptyset.
+```
+Clearly, this is equivalent to 
+```math
+F_y \cap G_0 = \emptyset.
+```
+
+
+"""
+
+# ╔═╡ f4969ec2-4f5b-4893-9385-d74b038f4738
+cm"""
+$(bth("4.2.16 (Karush–Kuhn–Tucker Sufficient Conditions)"))
+
+Let `` X `` be a nonempty open set in `` \mathbb{R}^n ``, and let 
+`` f: \mathbb{R}^n \to \mathbb{R} `` and `` g_i: \mathbb{R}^n \to \mathbb{R} `` 
+for `` i = 1, \ldots, m ``. 
+
+Consider Problem P
+
+$(min_latex_gi())
+
+Let `` \bar{x} `` be a KKT solution, and denote 
+`` I = \{ i : g_i(\bar{x}) = 0 \} ``.  
+Define `` S `` as the relaxed feasible region for Problem `` P `` 
+in which the constraints that are not binding at `` \bar{x} `` are dropped.  
+
+Then:
+<ul>
+
+<li> 
+
+**(a)**
+If there exists an `` \varepsilon ``-neighborhood `` N_{\varepsilon}(\bar{x}) `` about 
+`` \bar{x} ``, `` \varepsilon > 0 ``, such that `` f `` is pseudoconvex over 
+`` N_{\varepsilon}(\bar{x}) \cap S `` and `` g_i,\, i \in I, `` are differentiable at `` \bar{x} `` 
+and are quasiconvex over `` N_{\varepsilon}(\bar{x}) \cap S ``,  
+then `` \bar{x} `` is a local minimum for Problem `` P ``.
+
+</li>
+
+<li> 
+
+**(b)**  If `` f `` is pseudoconvex at `` \bar{x} ``, and if `` g_i,\, i \in I, `` are differentiable 
+and quasiconvex at `` \bar{x} ``, then `` \bar{x} `` is a global optimal solution to Problem `` P ``.  
+In particular, if this assumption holds true with the domain of the feasible restriction 
+to `` N_{\varepsilon}(\bar{x}) ``, for some `` \varepsilon > 0 ``, then `` \bar{x} `` is a local minimum 
+for `` P ``.
+
+</li>
+
+</ul>
+
+"""
+
+# ╔═╡ 6e386883-6678-4ed6-9c09-bd9a41201783
+cm"""
+$(bbl("Remark","💣"))
+__KKT conditions are not necessary for optimality for convex programming problems.__
+"""
+
+# ╔═╡ 995242c4-a629-4491-9db5-645730d6b9bb
+cm"""
+$(ex("Example",""))
+
+**Problem:**
+
+Minimize ``x_1``
+
+subject to:
+- ``(x_1 - 1)^2 + (x_2 - 1)^2 \leq 1`` (Circle centered at (1,1))
+- ``(x_1 - 1)^2 + (x_2 + 1)^2 \leq 1`` (Circle centered at (1,-1))
+
+The feasible region is the **lens-shaped intersection** of two unit circles.
+"""
+
+# ╠═╡ input
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -5222,17 +5917,39 @@ version = "1.8.1+0"
 # ╟─524c222e-f9e1-4421-88b0-072cb6b74d95
 # ╟─f68e53bc-5c85-4b4b-95b7-d94af1a7f124
 # ╟─4719b6e7-4eba-43a4-8b8d-3bdf3a46712f
-# ╠═10754f5c-e457-47a5-91d6-5f6ed203cda8
-# ╠═8f24c28e-57bd-42ae-9883-1cebc0715a0c
-# ╠═93a35971-c2eb-4dd3-bd66-b3335400861d
+# ╟─10754f5c-e457-47a5-91d6-5f6ed203cda8
+# ╟─8f24c28e-57bd-42ae-9883-1cebc0715a0c
+# ╟─93a35971-c2eb-4dd3-bd66-b3335400861d
 # ╟─dc71a49a-1e1f-474c-bfcd-cde361115ee1
 # ╟─ee994ad9-5fc9-4722-9201-536996e19b4c
 # ╟─5196f462-29fe-4f16-8e8d-c9b233a7dca8
 # ╟─6d6428eb-9442-43a3-9cad-815b7ccfc203
-# ╠═e64e8a77-6b32-46ab-b126-f77c917935ad
+# ╟─e64e8a77-6b32-46ab-b126-f77c917935ad
 # ╟─b7f2b3d3-8aa5-4a1e-97e5-a10f17aebbaf
 # ╟─a60d5096-9152-44e0-b5d2-3bb789dcff5d
-# ╠═b2cdd374-e06f-4d8f-9db1-6dfb7d661a40
+# ╟─b2cdd374-e06f-4d8f-9db1-6dfb7d661a40
+# ╟─10f03ebd-0da6-4ecf-afdd-e524a9ddf530
+# ╟─75d8b9f6-8d89-49b9-b8a4-e7cbbd066a31
+# ╟─9197b26f-59a7-4508-82f7-8441bea7a2e1
+# ╟─f1b16a2c-816a-4a31-aff2-f8f10ca45cc9
+# ╟─fd688b17-447f-4aa6-8584-20b04ef1f822
+# ╟─4699162f-ef6a-4279-9aa7-56170fa9a6ff
+# ╟─7ed6becd-1e79-4103-950a-017d187c585c
+# ╟─b06c5711-3f32-4514-a44d-e3aef2e69125
+# ╟─2d7d967e-bd11-4959-978e-2325f1b78f95
+# ╟─1791db8c-eb23-450c-b79d-82124a027cee
+# ╟─2b18aae5-24c1-4f3b-8926-9993c3f47db2
+# ╟─55c127e9-9647-4f9f-b9fd-4d9752071a90
+# ╟─cefc755f-2302-4213-8836-04ff8e33305d
+# ╟─38143cd0-3552-4083-954a-bb10efb8c090
+# ╟─1552ddcb-1e1d-43de-a9e3-f4a7c186970b
+# ╟─bccbbf3a-1cf3-41e2-bc0d-b32e122421ec
+# ╟─f4969ec2-4f5b-4893-9385-d74b038f4738
+# ╟─6e386883-6678-4ed6-9c09-bd9a41201783
+# ╟─995242c4-a629-4491-9db5-645730d6b9bb
+# ╟─2e8796d7-06b4-467e-b295-1019d34859bf
+# ╟─9389bae8-5492-4402-ac8a-fccadfd8351e
+# ╠═c6554735-c50a-4c61-a9ef-95dd3956b99e
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
