@@ -1715,7 +1715,207 @@ end
 # ╠═╡ info
 
 # ╔═╡ c6554735-c50a-4c61-a9ef-95dd3956b99e
+md"## 4.3 Problems Having Inequality and Equality Constraints"
 
+# ╔═╡ e319bc66-7810-4673-bc77-c3e0d8f1eeac
+md"### Fritz John Conditions"
+
+# ╔═╡ ca7bd385-5269-494e-a2b4-7a0b779d4389
+md"### Karush-Kuhn-Tucker Conditions "
+
+# ╔═╡ ecf678cd-8702-420c-9c6c-d7010ffe42f1
+begin
+	x431_val_html = @bind x431_val NumberField(0.0:0.01:2.5, default=1.0)
+	x432_val_html = @bind x432_val NumberField(0.0:0.01:2.5, default=1.5)
+	cm"""
+	### Select Point
+	
+	``x_1=`` $(x431_val_html)
+	
+	``x_2=`` $(x432_val_html)
+	"""
+end
+
+# ╔═╡ 237b661f-d295-4c50-ae22-dd3441881cc1
+let
+	# Objective function
+	f(x1, x2) = (x1 - 3)^2 + (x2 - 2)^2
+	
+	# Gradient of objective
+	∇f(x1, x2) = [2*(x1 - 3), 2*(x2 - 2)]
+	
+	# Constraints as g(x) ≤ 0
+	g1(x1, x2) = x1^2 + x2^2 - 5           # x₁² + x₂² ≤ 5
+	g2(x1, x2) = -x1                        # x₁ ≥ 0
+	g3(x1, x2) = -x2                        # x₂ ≥ 0
+	g4(x1, x2) = x1 + 2*x2 - 4             # x₁ + 2x₂ = 4 (equality)
+	g5(x1, x2) = -x1 - 2*x2 + 4            # x₁ + 2x₂ = 4 (other side)
+	
+	# Gradients of constraints
+	∇g1(x1, x2) = [2*x1, 2*x2]
+	∇g2(x1, x2) = [-1, 0]
+	∇g3(x1, x2) = [0, -1]
+	∇g4(x1, x2) = [1, 2]
+	∇g5(x1, x2) = [-1, -2]
+	
+	# Tolerance for active constraints
+	tol = 0.1
+	
+	# Check active constraints
+	function active_constraints(x1, x2)
+		active = []
+		if abs(g1(x1, x2)) < tol
+			push!(active, (1, "x₁² + x₂² ≤ 5", ∇g1(x1, x2), :red))
+		end
+		if abs(g2(x1, x2)) < tol
+			push!(active, (2, "x₁ ≥ 0", ∇g2(x1, x2), :orange))
+		end
+		if abs(g3(x1, x2)) < tol
+			push!(active, (3, "x₂ ≥ 0", ∇g3(x1, x2), :purple))
+		end
+		# Equality constraint is always active
+		if abs(g4(x1, x2)) < tol
+			push!(active, (4, "x₁ + 2x₂ = 4", ∇g4(x1, x2), :blue))
+		end
+		return active
+	end
+	
+	# Check feasibility
+	function is_feasible(x1, x2)
+		return g1(x1, x2) <= tol && 
+		       g2(x1, x2) <= tol && 
+		       g3(x1, x2) <= tol && 
+		       abs(g4(x1, x2)) <= tol  # equality constraint
+	end
+
+	x1_range = range(-0.5, 2.5, length=400)
+	x2_range = range(-0.5, 2.5, length=400)
+	
+	p = plot(size=(800, 800), aspect_ratio=:equal, 
+	         xlabel=L"x_1", ylabel=L"x_2", 
+	         title="Gradients at ($(round(x431_val, digits=2)), $(round(x432_val, digits=2)))",
+	         legend=:topright, legendfontsize=8,
+	         framestyle=:origin,
+	         xlims=(-0.5, 2.5), ylims=(-0.5, 2.5))
+	
+	# Plot contours of objective function
+	contour!(p, x1_range, x2_range, 
+	         (x1, x2) -> f(x1, x2), 
+	         levels=15, 
+	         color=:viridis, 
+	         linewidth=1.5,
+	         alpha=0.5,
+	         colorbar=false,
+	         label="")
+	
+	# Plot constraint boundaries
+	
+	# 1. Circle constraint: x₁² + x₂² = 5
+	θ = range(0, 2π, length=200)
+	circle_x1 = sqrt(5) .* cos.(θ)
+	circle_x2 = sqrt(5) .* sin.(θ)
+	plot!(p, circle_x1, circle_x2, 
+	      linewidth=2.5, color=:red, 
+	      label=L"x_1^2 + x_2^2 = 5", linestyle=:dash)
+	
+	# 2. x₁ = 0 (vertical line)
+	plot!(p, [0, 0], [-0.5, 2.5], 
+	      linewidth=2.5, color=:orange, 
+	      label=L"x_1 = 0", linestyle=:dash)
+	
+	# 3. x₂ = 0 (horizontal line)
+	plot!(p, [-0.5, 2.5], [0, 0], 
+	      linewidth=2.5, color=:purple, 
+	      label=L"x_2 = 0", linestyle=:dash)
+	
+	# 4. Equality constraint: x₁ + 2x₂ = 4
+	line_x1 = range(-0.5, 2.5, length=100)
+	line_x2 = (4 .- line_x1) ./ 2
+	plot!(p, line_x1, line_x2, 
+	      linewidth=3, color=:blue, 
+	      label=L"x_1 + 2x_2 = 4", linestyle=:solid)
+	
+	# Shade feasible region
+	# Find the feasible segment along x₁ + 2x₂ = 4
+	x1_line = range(0, 2.5, length=1000)
+	feasible_x1 = Float64[]
+	feasible_x2 = Float64[]
+	
+	for x1 in x1_line
+		x2 = (4 - x1) / 2
+		if g1(x1, x2) <= 0 && g2(x1, x2) <= 0 && g3(x1, x2) <= 0
+			push!(feasible_x1, x1)
+			push!(feasible_x2, x2)
+		end
+	end
+	
+	# Create a polygon ribbon around the feasible segment for shading
+	if !isempty(feasible_x1)
+		ribbon_width = 0.04
+		upper_x1 = feasible_x1 .+ ribbon_width .* (-1/sqrt(5))
+		upper_x2 = feasible_x2 .+ ribbon_width .* (2/sqrt(5))
+		lower_x1 = feasible_x1 .- ribbon_width .* (-1/sqrt(5))
+		lower_x2 = feasible_x2 .- ribbon_width .* (2/sqrt(5))
+		
+		# Create closed polygon
+		poly_x1 = vcat(upper_x1, reverse(lower_x1))
+		poly_x2 = vcat(upper_x2, reverse(lower_x2))
+		
+		plot!(p, poly_x1, poly_x2, 
+		      fillrange=0, fillalpha=0.3, fillcolor=:lightgreen,
+		      linewidth=0, label="Feasible Region",
+		      seriestype=:shape)
+	end
+	
+	# Plot selected point
+	point_color = is_feasible(x431_val, x432_val) ? :green : :red
+	scatter!(p, [x431_val], [x432_val], 
+	         markersize=10, color=point_color, 
+	         markerstrokewidth=2, markerstrokecolor=:black,
+	         label="Selected Point")
+	
+	# Plot gradient of objective function (∇f)
+	grad_f = ∇f(x431_val, x432_val)
+	scale = 0.35
+	quiver!(p, [x431_val], [x432_val], 
+	        quiver=([scale*grad_f[1]], [scale*grad_f[2]]),
+	        color=:black, linewidth=2.5, arrow=:closed,
+	        label=L"\nabla f")
+	
+	# Add annotation for ∇f
+	annotate!(p, x431_val + scale*grad_f[1] + 0.12, 
+	          x432_val + scale*grad_f[2] + 0.12, 
+	          text(L"\nabla f = [%$(round(grad_f[1], digits=2)), %$(round(grad_f[2], digits=2))]", 
+	               :black, 8, :left))
+	
+	# Plot gradients of active constraints
+	active = active_constraints(x431_val, x432_val)
+	
+	for (idx, name, grad, color) in active
+		quiver!(p, [x431_val], [x432_val], 
+		        quiver=([scale*grad[1]], [scale*grad[2]]),
+		        color=color, linewidth=2.5, arrow=:closed,
+		        label=L"\nabla g_%$idx")
+		
+		# Add annotation
+		offset_x = 0.12 * (grad[1] >= 0 ? 1 : -1)
+		offset_y = 0.12 * (grad[2] >= 0 ? 1 : -1)
+		annotate!(p, x431_val + scale*grad[1] + offset_x, 
+		          x432_val + scale*grad[2] + offset_y, 
+		          text(L"\nabla g_%$idx = [%$(round(grad[1], digits=2)), %$(round(grad[2], digits=2))]", 
+		               color, 8, :left))
+	end
+	
+	p
+end
+
+# ╔═╡ 20b7851e-1cd3-4a43-9e41-80ab4ad38ccc
+let
+	∇f=[-2.0;-2.0]
+	∇g = [4.0;2.0]
+	∇h = [1.0;2.0]
+	∇f+(1/3)∇g+(2/3)∇h
+end
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -1755,7 +1955,20 @@ begin
 	 ```
 	"""
 	end
-	
+
+	function eql_latex_gi()
+	cm"""
+	```math
+	 \begin{array}{lll}
+	 \min & f(x) \\
+	 \text{subject to}\\
+	 & g_i(x)\leq 0 & i=1,\cdots,m\\
+	 & h_i(x)= 0 & i=1,\cdots,l\\
+	 & x \in X
+	 \end{array}
+	 ```
+	"""
+	end
 	function min_latex()
 	cm"""
 	```math
@@ -4018,6 +4231,217 @@ The feasible region is the **lens-shaped intersection** of two unit circles.
 
 # ╠═╡ input
 
+# ╔═╡ 09a738b0-d156-4123-a5c1-a3fc349d680a
+cm"""
+We study the Problem
+
+$(eql_latex_gi())
+
+"""
+
+# ╔═╡ 402f4f37-fc08-4cb7-9b64-ffd028711de4
+cm"""
+$(bth("4.3.1"))
+
+Let ``X`` be a nonempty open set in ``\mathbb{R}^n`` and let ``f: \mathbb{R}^n \rightarrow R``, ``g_i: \mathbb{R}^n \rightarrow R`` for ``i= 1, \ldots, m`` and ``h_i: \mathbb{R}^n \rightarrow R`` for ``i= 1, \ldots, l``.
+
+Consider Problem P 
+
+$(eql_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __local optimal solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Furthermore, suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``. 
+- ``h_i`` for all ``i=1,\cdots l`` are __continuously differentiable__ at ``\overline{\mathbf{x}}``. 
+- ``\{\nabla h_i(\overline{\mathbf{x}})\}`` for ``i=1,\cdots l`` is __linearly independent__. 
+
+``\underline{\large{\text{THEN}}}``
+```math
+F_0 \cap G_0 \cap H_0 = \varnothing.
+```
+where
+```math
+\begin{array}{lcl}
+F_0 &=& \left\{d: \nabla f(\overline{x})^td < 0\right\}\\
+G_0 &=& \left\{d: \nabla g_i(\overline{x})^td < 0 \text{ for } i\in I\right\}\\
+F_0 &=& \left\{d: \nabla h_i(\overline{x})^td = 0 \text{ for } i =1,\cdots, l\right\}\\
+\end{array}
+```
+Conversely, suppose that 
+```math
+F_0 \cap G_0 \cap H_0=\varnothing.
+```
+and if 
+- ``f`` is __pseudoconvex__ at ``\overline{\mathbf{x}},`` 
+- ``g_i`` for ``i \in I`` are __strictly pseudoconvex__ over some ``\varepsilon``-neighborhood of ``\overline{\mathbf{x}}``; and if 
+- ``h_i`` for ``i=1, \ldots, \ell`` are __affine__. 
+
+
+``\underline{\large{\text{THEN}}}``
+
+``\overline{\mathbf{x}}`` is a local optimal solution.
+
+"""
+
+# ╔═╡ a8133296-0ec7-4504-96bb-39e443193c7f
+cm"""
+$(bth("4.3.1  (Fritz John Necessary Conditions)"))
+
+Let ``X`` be a nonempty open set in ``\mathbb{R}^n`` and let ``f: \mathbb{R}^n \rightarrow R``, ``g_i: \mathbb{R}^n \rightarrow R`` for ``i= 1, \ldots, m`` and ``h_i: \mathbb{R}^n \rightarrow R`` for ``i= 1, \ldots, l``.
+
+Consider Problem P 
+
+$(eql_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __local optimal solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Furthermore, suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``. 
+- ``h_i`` for all ``i=1,\cdots l`` are __continuously differentiable__ at ``\overline{\mathbf{x}}``. 
+- ``\{\nabla h_i(\overline{\mathbf{x}})\}`` for ``i=1,\cdots l`` is __linearly independent__. 
+
+``\underline{\large{\text{THEN}}}``
+<div style="text-align: center;font-weight:700;margin-bottom:40px;">
+
+There exist scalars ``u_0``, ``u_i, \text{ for } i \in I``,and  ``v_i \text{ for } i=1,\cdots, l`` such that
+</div>
+
+```math
+\begin{aligned}
+u_0 \nabla f(\overline{\mathbf{x}})+\sum_{i \in I} u_i \nabla g_i(\overline{\mathbf{x}}) +\sum_{i=1}^{l} v_i \nabla h_i(\overline{\mathbf{x}})& =0 \\
+u_0, u_i & \geq 0, \quad \text { for } i \in I \\
+\left(u_0, \mathbf{u}_I, \mathbf{v}\right) & \neq(0, \mathbf{0}, \mathbf{0}), 
+\end{aligned}
+```
+where ``\mathbf{u}_I`` is the vector whose components are ``u_i`` for ``i \in I`` and ``\mathbf{v}=(v_1,\cdots,v_l)``. Furthermore, if ``g_i`` for ``i \notin I`` are also differentiable at ``\overline{\mathbf{x}}``, the foregoing conditions can be written in the following equivalent form:
+```math
+\begin{aligned}
+u_0 \nabla f(\overline{\mathbf{x}})+\sum_{i=1}^m u_i \nabla g_i(\overline{\mathbf{x}}) +\sum_{i=1}^{l} v_i \nabla h_i(\overline{\mathbf{x}})& =\mathbf{0} & & \\
+u_i g_i(\overline{\mathbf{x}}) & =0 & & \text { for } i=1, \ldots, m \\
+u_0, u_i & \geq 0 & & \text { for } i=1, \ldots, m \\
+\left(u_0, \mathbf{u}, \mathbf{v}\right) & \neq(0, \mathbf{0}, \mathbf{0}), & &
+\end{aligned}
+```
+where ``\mathbf{u}^t=(u_1,\cdots,u_m)`` and ``\mathbf{v}^t=(v_1,\cdots,v_l)``.
+
+"""
+
+# ╔═╡ 3758e93e-ed91-478e-b431-caccf55bdda0
+cm"""
+$(bth("4.3.6 (Fritz John Sufficient Conditions)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R``, ``g_i: R^n \rightarrow R`` for ``i= 1, \ldots, m``, and ``h_i: R^n \rightarrow R`` for ``i= 1, \ldots, l``
+Consider Problem P
+
+$(eql_latex_gi())
+
+
+Let ``\overline{\mathbf{x}}`` be a FJ solution and denote 
+```math 
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}, \quad S=\{x\in X: g_i(x)\leq 0\text{ for } i\in I, h_i(x)=0 \text{ for } i =1,\cdots, l\}
+```
+If
+- ``h_i`` for ``i=1,\cdots,l`` are affine and ``\nabla h_i(\overline{x})``, ``i=1,\cdots l`` are linearly independent,
+- ``f`` is pseudoconvex on ``S\cap N_{\varepsilon}(\overline{\mathbf{x}})`` for some nieghbothood ``N_{\varepsilon}(\overline{x})`` of ``\overline{x}`` and ``\varepsilon>0``, and if 
+- ``g_i, i \in I``, are both strictly pseudoconvex on ``S\cap N_{\varepsilon}(\overline{\mathbf{x}})``. 
+
+Then ``\overline{\mathbf{x}}`` is a __local optimal solution for Problem P__. 
+
+"""
+
+# ╔═╡ 0f4d581b-9e6b-47d7-b014-d0d161cf84a9
+cm"""
+$(bth("4.3.7 (Karush-Kuhn-Tucker Necessary Conditions)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R``, ``g_i: R^n \rightarrow R`` for ``i= 1, \ldots, m``, and ``h_i: R^n \rightarrow R`` for ``i= 1, \ldots, l``. Consider the Problem P 
+$(eql_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __feasible solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Suppose that 
+- ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}`` and that 
+- ``g_i`` for ``i \notin I`` are continuous at ``\overline{\mathbf{x}}``.
+- ``h_i`` for ``i=1,\cdots l`` are continuously differentiable at ``\overline{\mathbf{x}}``.
+
+Furthermore, suppose that ``\overline{x}`` is a __regular point``, i.e.
+```math
+\nabla g_i(\overline{\mathbf{x}}) \text{ for } i \in I \text{ and } \nabla h_i(\overline{\mathbf{x}}) \text{ for } i=1, \cdots, l \text{ are linearly independent}.\qquad (CQ')
+```
+
+If ``\overline{\mathbf{x}}`` solves Problem P locally, 
+
+``\underline{\large{\text{THEN}}}``
+
+there exist __unique__ scalars ``u_i`` for ``i \in I`` and ``v_i`` for ``i=1,\cdots,l`` such that
+```math
+\begin{aligned}
+\nabla f(\overline{\mathbf{x}})+\sum_{i \in I} u_i \nabla g_i(\overline{\mathbf{x}}) +\sum_{i=1}^{l} v_i \nabla h_i(\overline{\mathbf{x}}) & =0 \\
+u_i & \geq 0 \quad \text { for } i \in I .
+\end{aligned}
+```
+
+In addition to the above assumptions, if ``g_i`` for each ``i \notin I`` is also differentiable at ``\overline{\mathbf{x}}``, the foregoing conditions can be written in the following equivalent form:
+```math
+\begin{aligned}
+\nabla f(\overline{\mathbf{x}})+\sum_{i=1}^m u_i \nabla g_i(\overline{\mathbf{x}})
++\sum_{i=1}^m v_i \nabla h_i(\overline{\mathbf{x}})& =0 & & \\
+u_i g_i(\overline{\mathbf{x}}) & =0 & & \text { for } i=1, \ldots, m \\
+u_i & \geq 0 & & \text { for } i=1, \ldots, m
+\end{aligned}
+```
+"""
+
+# ╔═╡ fa6c7bd2-e304-4555-833d-989d6414964a
+cm"""
+$(bth("4.3.8 (Karush-Kuhn-Tucker Necessary Conditions)"))
+
+Let ``X`` be a nonempty open set in ``R^n``, and let ``f: R^n \rightarrow R``, ``g_i: R^n \rightarrow R`` for ``i= 1, \ldots, m`` and ``h_i: R^n \rightarrow R`` for ``i= 1, \ldots, l``. Consider the Problem P 
+$(eql_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a __feasible solution__, and denote 
+```math
+I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}.
+```
+Suppose that the __KKT__ conditions hold true at ``\overline{\mathbf{x}}``; that is, there exist scalars ``\bar{u}_i \geq 0`` for ``i \in I`` and ``\bar{v}_i`` for ``i= 1, \ldots, \ell`` such that
+```math
+\nabla f(\overline{\mathbf{x}})+\sum_{i \in I} \bar{u}_i \nabla g_i(\overline{\mathbf{x}})+\sum_{i=1}^{\ell} \bar{v}_i \nabla h_i(\overline{\mathbf{x}})=\mathbf{0} .
+```
+
+Let ``J=\left\{i: \bar{v}_i>0\right\}`` and ``K=\left\{i: \widetilde{v}_i<0\right\}``. Further, suppose that 
+- ``f`` is pseudoconvex at ``\overline{\mathbf{x}}``, 
+- ``g_i`` is quasiconvex at ``\overline{\mathbf{x}}`` for ``i \in I,`` 
+- ``h_i`` is quasiconvex at ``\overline{\mathbf{x}}`` for ``i \in J``, and ``h_i`` is quasiconcave at ``\overline{\mathbf{x}}`` for ``i \in K``. 
+
+``\underline{\large{\text{THEN}}}``
+
+``\overline{\mathbf{x}}`` is a __global optimal solution__ to Problem P. 
+
+In particular, if the generalized convexity assumptions on the objective and constraint functions are restricted to the domain ``N_{\varepsilon}(\overline{\mathbf{x}})`` for some ``\varepsilon>0, \overline{\mathbf{x}}`` is a __local minimum__ for P .
+"""
+
+# ╔═╡ 07cb2ece-065f-4790-b8e2-ef164907d69d
+cm"""
+$(ex("Example","4.3.4"))
+```math
+\begin{aligned}
+\operatorname{Minimize}\left(x_1-3\right)^2 & +\left(x_2-2\right)^2 \\
+\text { subject to } x_1^2+x_2^2 & \leq 5 \\
+-x_1 & \leq 0 \\
+-x_2 & \leq 0 \\
+x_1+2 x_2 & =4
+\end{aligned}
+```
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -5949,7 +6373,19 @@ version = "1.8.1+0"
 # ╟─995242c4-a629-4491-9db5-645730d6b9bb
 # ╟─2e8796d7-06b4-467e-b295-1019d34859bf
 # ╟─9389bae8-5492-4402-ac8a-fccadfd8351e
-# ╠═c6554735-c50a-4c61-a9ef-95dd3956b99e
+# ╟─c6554735-c50a-4c61-a9ef-95dd3956b99e
+# ╟─09a738b0-d156-4123-a5c1-a3fc349d680a
+# ╟─402f4f37-fc08-4cb7-9b64-ffd028711de4
+# ╟─e319bc66-7810-4673-bc77-c3e0d8f1eeac
+# ╟─a8133296-0ec7-4504-96bb-39e443193c7f
+# ╟─3758e93e-ed91-478e-b431-caccf55bdda0
+# ╟─ca7bd385-5269-494e-a2b4-7a0b779d4389
+# ╟─0f4d581b-9e6b-47d7-b014-d0d161cf84a9
+# ╟─fa6c7bd2-e304-4555-833d-989d6414964a
+# ╟─07cb2ece-065f-4790-b8e2-ef164907d69d
+# ╟─ecf678cd-8702-420c-9c6c-d7010ffe42f1
+# ╟─237b661f-d295-4c50-ae22-dd3441881cc1
+# ╠═20b7851e-1cd3-4a43-9e41-80ab4ad38ccc
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
