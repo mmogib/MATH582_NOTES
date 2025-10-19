@@ -1728,7 +1728,7 @@ begin
 	x431_val_html = @bind x431_val NumberField(0.0:0.01:2.5, default=1.0)
 	x432_val_html = @bind x432_val NumberField(0.0:0.01:2.5, default=1.5)
 	cm"""
-	### Select Point
+	__Select Point__
 	
 	``x_1=`` $(x431_val_html)
 	
@@ -1916,6 +1916,28 @@ let
 	∇h = [1.0;2.0]
 	∇f+(1/3)∇g+(2/3)∇h
 end
+
+# ╔═╡ 54c9ffd1-97be-44cd-8b78-07ec3f6f6299
+md"## 4.4 Second-Order Necessary and Sufficient Conditions for Constrained Problems"
+
+# ╔═╡ ebc2e75c-21e1-452c-9e09-da88cdc488a6
+md"# Chapter 5:Constraint Qualifications"
+
+# ╔═╡ 1c78770b-4814-48ee-837a-1c0f2c99a7c8
+md"## 5.1 Cone of Tangents "
+
+# ╔═╡ bdf534ab-e2a7-456c-83dd-23fe5cb48028
+md"### Abadie Constraint Qualification"
+
+# ╔═╡ 6db4f42f-6c20-44db-a0e6-c0b061781538
+cm"""
+```math
+T=G^{\prime}.
+```
+"""
+
+# ╔═╡ af44bbd1-b9a6-4668-99a2-794fad3f6a42
+md"### Linearly Constrained Problems"
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -4268,7 +4290,7 @@ where
 \begin{array}{lcl}
 F_0 &=& \left\{d: \nabla f(\overline{x})^td < 0\right\}\\
 G_0 &=& \left\{d: \nabla g_i(\overline{x})^td < 0 \text{ for } i\in I\right\}\\
-F_0 &=& \left\{d: \nabla h_i(\overline{x})^td = 0 \text{ for } i =1,\cdots, l\right\}\\
+H_0 &=& \left\{d: \nabla h_i(\overline{x})^td = 0 \text{ for } i =1,\cdots, l\right\}\\
 \end{array}
 ```
 Conversely, suppose that 
@@ -4440,6 +4462,228 @@ $(ex("Example","4.3.4"))
 x_1+2 x_2 & =4
 \end{aligned}
 ```
+"""
+
+# ╔═╡ e15eb170-02e9-42e9-b8d5-35d9284fd30e
+cm"""
+Consider the problem (P)
+
+$(eql_latex_gi())
+Let 
+```math
+S=\left\{\mathbf{x}: g_i(\mathbf{x}) \leq 0\right. \text{ for }i=1, \ldots, m, h_i(\mathbf{x})=0\text{ for }i=1, \ldots, \ell\text{ and }\left.\mathbf{x} \in X\right\}.
+```
+
+
+and let's define the Lagrangiun function for this problem.
+```math
+\phi(\mathbf{x}, \mathbf{u}, \mathbf{v})=f(\mathbf{x})+\sum_{i=1}^m u_i g_i(\mathbf{x})+\sum_{i=1}^{\ell} v_i h_i(\mathbf{x}).
+```
+
+- Now, let ``\overline{\mathbf{x}}`` be a KKT point for Problem P , with associated Lagrangian multipliers ``\overline{\mathbf{u}}`` and ``\overline{\mathbf{v}}`` corresponding to the inequality and equality constraints, respectively. 
+- Conditioned on ``\overline{\mathbf{u}}`` and ``\overline{\mathbf{v}}``, define the restricted Lagrangian function
+```math
+L(\mathbf{x}) \equiv \phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}})=f(\mathbf{x})+\sum_{i \in I} \bar{u}_i g_i(\mathbf{x})+\sum_{i=1}^{\ell} \bar{v}_i h_i(\mathbf{x}),
+```
+where ``I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}`` is the index set of the binding inequality constraints at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ 4c0fffcb-327a-4a45-a8b6-cea81005ab2b
+cm"""
+$(bbl("Lemma","4.4.1"))
+
+Consider Problem P 
+$(eql_latex_gi())
+
+where the objective and constraint defining functions are all __twice differentiable__, and where ``X`` is a nonempty, open set in ``\mathbb{R}^n``.
+
+Suppose that ``\overline{\mathbf{x}}`` is a __KKT point__ for Problem P with Lagrangian multipliers ``\overline{\mathbf{u}}`` and ``\overline{\mathbf{v}}`` associated with the inequality and equality constraints, respectively. 
+
+Define the restricted Lagrangian function ``L`` as
+
+```math
+L(\mathbf{x}) \equiv \phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}})=f(\mathbf{x})+\sum_{i \in I} \bar{u}_i g_i(\mathbf{x})+\sum_{i=1}^{\ell} \bar{v}_i h_i(\mathbf{x}),
+```
+
+and denote its Hessian by ``\nabla^2 L``.
+
+- (a.) If ``\nabla^2 L`` is __positive semidefinite__ for all ``\mathbf{x} \in S``. __THEN__ ``  \overline{\mathbf{x}}`` is a global minimum for Problem P . On the other hand, if ``\nabla^2 L`` is positive semidefinite for all ``\mathbf{x} \in S \cap N_{\varepsilon}(\overline{\mathbf{x}})`` for some ``\varepsilon``-neighborhood ``N_{\varepsilon}(\overline{\mathbf{x}})`` about ``\overline{\mathbf{x}}, \varepsilon>0, \overline{\mathbf{x}}`` is a local minimum for Problem P.
+
+- (b.) If ``\nabla^2 L(\overline{\mathbf{x}})`` is positive definite, ``\overline{\mathbf{x}}`` is a strict local minimum for Problem P.
+"""
+
+# ╔═╡ d19630de-5c1d-47b5-b91e-359ae2898453
+cm"""
+$(bth("4.4.2 Theorem (KKT Second-Order Sufficient Conditions)"))
+
+Consider Problem P 
+$(eql_latex_gi())
+
+where the objective and constraint defining functions are all __twice differentiable, and where ``X`` is a nonempty, open set in ``\mathbb{R}^n``__. 
+
+Let ``\overline{\mathbf{x}}`` be a __KKT point__ for Problem P , with Lagrangian multipliers ``\overline{\mathbf{u}}`` and ``\overline{\mathbf{v}}`` associated with the inequality and equality constraints, respectively. 
+
+Let 
+```math
+I =\left\{i: g_i(\overline{\mathbf{x}})=0\right\},\quad \text{and denote } I^{+}=\left\{i \in I: \bar{u}_i>0\right\}\text { and } I^0=\left\{i \in I: \bar{u}_i=0\right\}.
+```
+( ``I^{+}`` and ``I^0`` are sometimes referred to as the set of strongly active and weakly active constraints, respectively.) 
+
+Define the restricted Lagrangian function ``L(\mathbf{x})`` as 
+
+```math
+L(\mathbf{x}) \equiv \phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}})=f(\mathbf{x})+\sum_{i \in I} \bar{u}_i g_i(\mathbf{x})+\sum_{i=1}^{\ell} \bar{v}_i h_i(\mathbf{x}),
+```
+
+and denote its Hessian at ``\overline{\mathbf{x}}`` by
+```math
+\nabla^2 L(\overline{\mathbf{x}}) \equiv \nabla^2 f(\overline{\mathbf{x}})+\sum_{i \in I} \bar{u}_i \nabla^2 g_i(\overline{\mathbf{x}})+\sum_{i=1}^{\ell} \bar{v}_i \nabla^2 h_i(\overline{\mathbf{x}}),
+```
+
+where ``\nabla^2 f(\overline{\mathbf{x}}), \nabla^2 g_i(\overline{\mathbf{x}})`` for ``i \in I``, and ``\nabla^2 h_i(\overline{\mathbf{x}})`` for ``i=1, \ldots, \ell``, are the Hessians of ``f, g_i`` for ``i \in I``, and ``h_i`` for ``i=1, \ldots, \ell``, respectively, all evaluated at ``\overline{\mathbf{x}}``. Define the cone
+```math
+\begin{aligned}
+C=\left\{\mathbf{d} \neq \mathbf{0}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d}=0\right. & \text { for } i \in I^{+}, \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0 \text { for } i \in I^0, \\
+\nabla h_i(\overline{\mathbf{x}})^t \mathbf{d}=0 & \text { for } i=1, \ldots, \ell\} .
+\end{aligned}
+```
+
+Then if ``\mathbf{d}^t \nabla^2 L(\overline{\mathbf{x}}) \mathbf{d}>0`` for all ``\mathbf{d} \in C``, we have that ``\overline{\mathbf{x}}`` is a strict local minimum for P.
+"""
+
+# ╔═╡ fdcba702-afd5-4b24-860a-03f7b04d6f1e
+cm"""
+$(bbl("Corollary"))
+Consider Problem P as defined in the theorem, and let ``\overline{\mathbf{x}}`` be a KKT point with associated Lagrangian multipliers ``\overline{\mathbf{u}}`` and ``\overline{\mathbf{v}}`` corresponding to the inequality and equality constraints, respectively. 
+
+Furthermore, suppose that the collection of vectors ``\nabla g_i(\overline{\mathbf{x}})`` for ``i \in I^{+}=\left\{i \in I: \bar{u}_i>0\right\}`` and ``\nabla h_i(\overline{\mathbf{x}})`` for ``i=1, \ldots, \ell`` contains a set of ``n`` __linearly independent vectors__. 
+
+Then ``\overline{\mathbf{x}}`` is a strict local minimum for P .
+"""
+
+# ╔═╡ 1511e16d-6573-46dd-8f71-930117000963
+cm"""
+$(bth("4.4.3 Theorem (KKT Second-Order Necessary Conditions)"))
+
+Consider Problem P
+
+$(eql_latex_gi())
+
+where the objective and constraint defining functions are all __twice differentiable, and where ``X`` is a nonempty, open set in ``\mathbb{R}^n``__. 
+
+Let ``\overline{\mathbf{x}}`` be a local minimum for Problem P , and denote 
+```math 
+I=\left\{i: g_i(\overline{\mathbf{x}})=\right. 0\}.
+```
+
+Define the restricted Lagrangian function ``L(\mathbf{x})`` as,
+```math
+L(\mathbf{x}) \equiv \phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}})=f(\mathbf{x})+\sum_{i \in I} \bar{u}_i g_i(\mathbf{x})+\sum_{i=1}^{\ell} \bar{v}_i h_i(\mathbf{x}),
+```
+
+and denote its Hessian at ``\overline{\mathbf{x}}`` by
+```math
+\nabla^2 L(\overline{\mathbf{x}}) \equiv \nabla^2 f(\overline{\mathbf{x}})+\sum_{i \in I} \bar{u}_i \nabla^2 g_i(\overline{\mathbf{x}})+\sum_{i=1}^{\ell} \bar{v}_i \nabla^2 h_i(\overline{\mathbf{x}}),
+```
+where ``\nabla^2 f(\overline{\mathbf{x}}), \nabla^2 g_i(\overline{\mathbf{x}})`` for ``i \in I``, and ``\nabla^2 h_i(\overline{\mathbf{x}})`` for ``i=1, \ldots, \ell`` are the Hessians of ``f, g_i`` for ``i \in I``, and ``h_i`` for ``i=1, \ldots, \ell``, respectively, all evaluated at ``\overline{\mathbf{x}}``. 
+
+Assume that ``\nabla g_i(\overline{\mathbf{x}})`` for ``i \in I``, and ``\nabla h_i(\overline{\mathbf{x}})`` for ``i=1 \ldots, \ell``, are __linearly independent__.
+
+Then ``\overline{\mathbf{x}}`` is a __KKT point__ having Lagrange multipliers ``\overline{\mathbf{u}} \geq \mathbf{0}`` and ``\overline{\mathbf{v}}`` associated with the inequality and the equality constraints, respectively. 
+
+Moreover, ``\mathbf{d}^t \nabla^2 L(\overline{\mathbf{x}}) \mathbf{d} \geq 0`` for all ``\mathbf{d} \in C`` where
+```math 
+\begin{array}{lcl}
+C&=\left\{\right.&\mathbf{d} \neq \mathbf{0}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d}=0\text{ for }i \in I^{+}, \\
+&& \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0\text{ for }i \in I^0,\\
+&& \nabla h_i(\overline{\mathbf{x}})^t \mathbf{d}=0\text{ for all }i=1, \ldots, \ell\\
+&&\},
+\end{array}
+```
+where ``I^{+}=\left\{i \in I: \bar{u}_i>0\right\}`` and ``I^0=\left\{i \in I: \bar{u}_i=0\right\}``.
+"""
+
+# ╔═╡ 727d41be-4f75-4dca-b117-434ea4517aae
+cm"""
+$(ex("Example",""))
+```math
+\mathrm{P}: \min\left\{\left(x_1-1\right)^2+x_2^2: g_1(\mathbf{x})=2 k x_1-x_2^2 \leq 0\right\},\qquad k>0.
+```
+
+"""
+
+# ╔═╡ 1214ea8b-3295-4ba6-b713-0f7db0ece34c
+cm"""
+$(define("Cone of tangent"))
+
+Let ``S`` be a nonempty set in ``R^n``, and let ``\overline{\mathbf{x}} \in \mathrm{cl} S``. 
+
+The __cone of tangents of ``S`` at ``\overline{\mathbf{x}}``__, denoted by ``T``, is 
+
+```math
+T =  \left\{\mathbf{d} \;|\; \mathbf{d}=\lim _{k \rightarrow \infty} \lambda_k\left(\mathbf{x}_k-\overline{\mathbf{x}}\right),
+ \lambda_k > 0, \mathbf{x}_k \in S \text{ for each }k, \text{ and } \mathbf{x}_k \rightarrow \overrightarrow{\mathbf{x}}.
+\right\}
+```
+"""
+
+# ╔═╡ 2bb7e096-9311-4f92-8c25-74b0da8993d2
+cm"""
+$(bbl("Remarks",""))
+
+From the above definition, it is clear that ``\mathbf{d}`` belongs to the cone of tangents if there is a feasible sequence ``\left\{\mathbf{x}_k\right\}`` converging to ``\overline{\mathbf{x}}`` such that the directions ``\mathbf{x}_k-\overline{\mathbf{x}}`` converge to ``\mathbf{d}``. (See Exercise 5.1),
+
+$(post_img("https://www.dropbox.com/scl/fi/i7d73wt0riqwlrhbug05q/fig5.1.png?rlkey=zvgeopv5pcfon73h1774unw45&dl=1"))
+
+"""
+
+# ╔═╡ 64fe0bf7-8de4-4d43-ba35-c8d473970bff
+cm"""
+$(bth("5.1.2"))
+
+Let ``S`` be a nonempty set in ``R^n``, and let ``\overline{\mathbf{x}} \in S``. Furthermore, suppose that ``f: R^n \rightarrow R`` is differentiable at ``\overline{\mathbf{x}}``. 
+
+If ``\overline{\mathbf{x}}`` locally solves the problem to minimize ``f(\mathbf{x})``
+subject to ``\mathbf{x} \in S``.
+
+THEN
+
+```math
+F_0 \cap T=\varnothing,
+```
+
+where ``F_0=\left\{\mathbf{d}: \nabla f(\overline{\mathbf{x}})^t \mathbf{d}<0\right\}`` and ``T`` is the cone of tangents of ``S`` at ``\overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ ea9e38bc-63f1-44e6-939d-7f9fc17e44c3
+cm"""
+$(bth("5.1.3 Theorem (Karush-Kuhn-Tucker Necessary Conditions)"))
+
+Let ``X`` be a nonempty set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``g_i: R^n \rightarrow R`` for ``i=1, \ldots``, ``m``. 
+
+Consider the problem: 
+$(min_latex_gi())
+
+Let ``\overline{\mathbf{x}}`` be a feasible solution, and let ``I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}``. Suppose that ``f`` and ``g_i`` for ``i \in I`` are differentiable at ``\overline{\mathbf{x}}``. 
+
+Furthermore, suppose that the constraint qualification ``T=G^{\prime}`` holds true, where ``T`` is the cone of tangents of the feasible region at ``\overline{\mathbf{x}}`` and ``G^{\prime}=\left\{\mathbf{d}: \nabla g_i(\overline{\mathbf{x}})^t \mathbf{d} \leq 0\right.`` for ``\left.i \in I\right\}``. If ``\overline{\mathbf{x}}`` is a local optimal solution, there exist nonnegative scalars ``u_i`` for ``i \in I`` such that
+```math
+\nabla f(\overline{\mathbf{x}})+\sum_{i \in I} u_i \nabla g_i(\overline{\mathbf{x}})=0
+```
+"""
+
+# ╔═╡ 81eb374a-68ee-4bc7-ad02-b352536ad8a8
+cm"""
+$(bbl(" Lemma","5.1.4"))
+
+Let ``\mathbf{A}`` be an ``m \times n`` matrix, let ``\mathbf{b}`` be an ``m``-vector, and let ``S=\{\mathbf{x}: \mathbf{A x} \leq \mathbf{b}\}``. 
+
+Suppose that ``\overline{\mathbf{x}} \in S`` is such that ``\mathbf{A}_1 \overline{\mathbf{x}}=\mathbf{b}_1`` and ``\mathbf{A}_2 \overline{\mathbf{x}}<\mathbf{b}_2``, where ``\mathbf{A}^t=\left(\mathbf{A}_1^t, \mathbf{A}_2^t\right)`` and ``\mathbf{b}^t=\left(\mathbf{b}_1^t, \mathbf{b}_2^t\right)``. Then ``T=G^{\prime}``, where ``T`` is the cone of tangents of ``S`` at ``\overline{\mathbf{x}}`` and ``G^{\prime} =\left\{\mathbf{d}: \mathbf{A}_1 \mathbf{d} \leq \mathbf{0}\right\}``.
+"""
+
+# ╔═╡ 944649de-8db0-44a7-98b9-7de1855917e7
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/15x0oz0xjvpuyb0k0hacp/summary_51.png?rlkey=9fyktiu6f4cveams2kanbtzqc&dl=1"))
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -6386,6 +6630,24 @@ version = "1.8.1+0"
 # ╟─ecf678cd-8702-420c-9c6c-d7010ffe42f1
 # ╟─237b661f-d295-4c50-ae22-dd3441881cc1
 # ╠═20b7851e-1cd3-4a43-9e41-80ab4ad38ccc
+# ╟─54c9ffd1-97be-44cd-8b78-07ec3f6f6299
+# ╟─e15eb170-02e9-42e9-b8d5-35d9284fd30e
+# ╟─4c0fffcb-327a-4a45-a8b6-cea81005ab2b
+# ╟─d19630de-5c1d-47b5-b91e-359ae2898453
+# ╟─fdcba702-afd5-4b24-860a-03f7b04d6f1e
+# ╟─1511e16d-6573-46dd-8f71-930117000963
+# ╟─727d41be-4f75-4dca-b117-434ea4517aae
+# ╟─ebc2e75c-21e1-452c-9e09-da88cdc488a6
+# ╟─1c78770b-4814-48ee-837a-1c0f2c99a7c8
+# ╟─1214ea8b-3295-4ba6-b713-0f7db0ece34c
+# ╟─2bb7e096-9311-4f92-8c25-74b0da8993d2
+# ╟─64fe0bf7-8de4-4d43-ba35-c8d473970bff
+# ╟─bdf534ab-e2a7-456c-83dd-23fe5cb48028
+# ╟─6db4f42f-6c20-44db-a0e6-c0b061781538
+# ╟─ea9e38bc-63f1-44e6-939d-7f9fc17e44c3
+# ╟─af44bbd1-b9a6-4668-99a2-794fad3f6a42
+# ╟─81eb374a-68ee-4bc7-ad02-b352536ad8a8
+# ╟─944649de-8db0-44a7-98b9-7de1855917e7
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
