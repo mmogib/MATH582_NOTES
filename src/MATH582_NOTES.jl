@@ -1939,6 +1939,15 @@ T=G^{\prime}.
 # ╔═╡ af44bbd1-b9a6-4668-99a2-794fad3f6a42
 md"### Linearly Constrained Problems"
 
+# ╔═╡ db4a64b6-006a-40b5-8fb1-3a6b5695aba7
+md"### Other Constraint Qualifications"
+
+# ╔═╡ ff85953a-048f-4314-ad82-9ce922e232b6
+md"# Chapter 6: Lagrangian Duality and Saddle Point Optimality Conditions"
+
+# ╔═╡ b18e856c-378d-47ad-8d33-e570034aaba0
+md"## Geometric Interpretation of the Dual Problem"
+
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
     struct LocalImage
@@ -1987,6 +1996,35 @@ begin
 	 & g_i(x)\leq 0 & i=1,\cdots,m\\
 	 & h_i(x)= 0 & i=1,\cdots,l\\
 	 & x \in X
+	 \end{array}
+	 ```
+	"""
+	end
+	function primalP()
+	cm"""
+	```math
+	 \begin{array}{lll}
+	 \min & f(\mathbf{x}) \\
+	 \text{subject to}\\
+	 & \mathbf{g}(\mathbf{x})\leq 0 \\
+	 & \mathbf{h}(\mathbf{x})= 0 \\
+	 & \mathbf{x} \in X
+	 \end{array}
+	 ```
+	"""
+	end
+	function dualP()
+	cm"""
+	```math
+	 \begin{array}{l}
+	 \begin{array}{lll}
+	 \max & \theta(\mathbf{u},\mathbf{v}) \\
+	 \text{subject to}\\
+	 & \mathbf{u}\geq 0 \\
+	 \end{array} \\
+	\text{where} \; \theta(\mathbf{u},\mathbf{v}) =\inf{\left\{
+		f(\mathbf{x})+\mathbf{u}^t\mathbf{g}(\mathbf{x})+\mathbf{v}^t\mathbf{h}\;:\; \mathbf{x} \in X
+		\right\}}
 	 \end{array}
 	 ```
 	"""
@@ -4622,7 +4660,7 @@ The __cone of tangents of ``S`` at ``\overline{\mathbf{x}}``__, denoted by ``T``
 
 ```math
 T =  \left\{\mathbf{d} \;|\; \mathbf{d}=\lim _{k \rightarrow \infty} \lambda_k\left(\mathbf{x}_k-\overline{\mathbf{x}}\right),
- \lambda_k > 0, \mathbf{x}_k \in S \text{ for each }k, \text{ and } \mathbf{x}_k \rightarrow \overrightarrow{\mathbf{x}}.
+ \lambda_k > 0, \mathbf{x}_k \in S \text{ for each }k, \text{ and } \mathbf{x}_k \rightarrow \overline{\mathbf{x}}.
 \right\}
 ```
 """
@@ -4683,7 +4721,86 @@ Suppose that ``\overline{\mathbf{x}} \in S`` is such that ``\mathbf{A}_1 \overli
 
 # ╔═╡ 944649de-8db0-44a7-98b9-7de1855917e7
 cm"""
+$(post_img("https://www.dropbox.com/scl/fi/xw6xbd9apxz0fb95vmi62/summary_51a.png?rlkey=y95iqacjp9ku8ygkx2d23qohf&dl=1"))
+
+Instead, we use CQs
+
 $(post_img("https://www.dropbox.com/scl/fi/15x0oz0xjvpuyb0k0hacp/summary_51.png?rlkey=9fyktiu6f4cveams2kanbtzqc&dl=1"))
+"""
+
+# ╔═╡ 10eb7bc5-9ff8-4257-aac5-0ede766671c1
+cm"""
+$(bbl("Slater's Constraint Qualification",""))
+The set ``X`` is open, each ``g_i`` for ``i \in I`` is pseudoconvex at ``\overline{\mathbf{x}}``, for each ``g_i`` for ``i \notin I`` is continuous at ``\overline{\mathbf{x}}``, and there is an ``\mathbf{x} \in X`` such that ``g_i(\mathbf{x})<0`` for all ``i \in I``.
+"""
+
+# ╔═╡ c167a557-543b-4fda-b492-1723546e0adf
+cm"""
+$(bbl("Linear Independence Constraint Qualification",""))
+The set ``X`` is open, each ``g_i`` for ``i \notin I`` is continuous at ``\overline{\mathbf{x}}``, and ``\nabla g_i(\overline{\mathbf{x}})`` for ``i \in I`` are linearly independent.
+
+$(ebl())
+
+$(bbl("Cottle's Constraint Qualification",""))
+The set ``X`` is open and each ``g_i`` for ``i \notin I`` is continuous at ``\overline{\mathbf{x}}``, and ``\operatorname{cl} G_0=G^{\prime}``.
+
+$(ebl())
+
+$(bbl("Zangwill's Constraint Qualification",""))
+```math
+\operatorname{cl} D=G^{\prime}
+```
+$(ebl())
+
+$(bbl("Kuhn-Tucker's Constraint Qualification",""))
+```math
+\mathrm{cl} A=G^{\prime}
+```
+$(ebl())
+"""
+
+# ╔═╡ 154a2bc5-4614-4f25-b0cf-e31febe4ce4d
+cm"""
+__Primal Problem P__
+$(primalP())
+
+__Dual Problem D__
+$(dualP())
+"""
+
+# ╔═╡ 0b592f6b-a856-45d7-92f2-c33fe3c86950
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/rob9mummhdctha0cmwldf/fig6.1.png?rlkey=skbbd4x6reclah3keggdinzqo&dl=1"))
+"""
+
+# ╔═╡ 7fa07010-6422-4bef-8f7c-70ee9a2a0254
+cm"""
+$(bbl("Remarks",""))
+In the figure above, we define the function
+```math
+v(y)=\min \{f(\mathbf{x}): g(\mathbf{x}) \leq y, \mathbf{x} \in X\} .
+```
+
+The function ``v`` is called a __perturbation function__ since it is the optimal value function of a problem obtained from the original problem by perturbing the right-hand side of the inequality constraint ``g(x) \leq 0`` to ``y`` from the value of zero. Note that ``\nu(y)`` is a nonincreasing function of ``y``.
+"""
+
+# ╔═╡ 8042d4e4-bca7-4674-a6a6-9298635b6ee0
+cm"""
+$(ex("Example",""))
+
+Consider the following primal problem:
+```math
+\begin{array}{ll}
+\operatorname{Minimize} & x_1^2+x_2^2 \\
+\text { subject to } & -x_1-x_2+4 \leq 0 \\
+& x_1, x_2 \geq 0 .
+\end{array}
+```
+"""
+
+# ╔═╡ 3904638a-43bf-443b-97f5-8ce42bf28ba6
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/1aswfuc2jscnh38aajjf2/fig6.2.png?rlkey=2arjmx8utbhlfg7dm1293sjvp&dl=1"))
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -6648,6 +6765,16 @@ version = "1.8.1+0"
 # ╟─af44bbd1-b9a6-4668-99a2-794fad3f6a42
 # ╟─81eb374a-68ee-4bc7-ad02-b352536ad8a8
 # ╟─944649de-8db0-44a7-98b9-7de1855917e7
+# ╟─db4a64b6-006a-40b5-8fb1-3a6b5695aba7
+# ╟─10eb7bc5-9ff8-4257-aac5-0ede766671c1
+# ╟─c167a557-543b-4fda-b492-1723546e0adf
+# ╟─ff85953a-048f-4314-ad82-9ce922e232b6
+# ╟─154a2bc5-4614-4f25-b0cf-e31febe4ce4d
+# ╟─b18e856c-378d-47ad-8d33-e570034aaba0
+# ╟─0b592f6b-a856-45d7-92f2-c33fe3c86950
+# ╟─7fa07010-6422-4bef-8f7c-70ee9a2a0254
+# ╟─8042d4e4-bca7-4674-a6a6-9298635b6ee0
+# ╟─3904638a-43bf-443b-97f5-8ce42bf28ba6
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
