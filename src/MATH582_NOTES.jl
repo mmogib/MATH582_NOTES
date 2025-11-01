@@ -4768,6 +4768,16 @@ __Dual Problem D__
 $(dualP())
 """
 
+# ╔═╡ 86087922-ac55-4595-92c5-27fabc10aac6
+cm"""
+$(bbl("Remarks",""))
+- ``\theta``: dual function. (may assume ``\infty``; primal is infeasible)
+- ``\theta`` : ``\inf`` Lagrangian subproblem.
+- ``u, v`` : dual variables.
+- max-min: problem.
+- __Important__: a Given a primal prablem many dual problems can be derived (i) which constraints are considered ``g(x) \leqslant 0`` \& (ii) which are ``X``.
+"""
+
 # ╔═╡ 0b592f6b-a856-45d7-92f2-c33fe3c86950
 cm"""
 $(post_img("https://www.dropbox.com/scl/fi/rob9mummhdctha0cmwldf/fig6.1.png?rlkey=skbbd4x6reclah3keggdinzqo&dl=1"))
@@ -6770,6 +6780,7 @@ version = "1.8.1+0"
 # ╟─c167a557-543b-4fda-b492-1723546e0adf
 # ╟─ff85953a-048f-4314-ad82-9ce922e232b6
 # ╟─154a2bc5-4614-4f25-b0cf-e31febe4ce4d
+# ╟─86087922-ac55-4595-92c5-27fabc10aac6
 # ╟─b18e856c-378d-47ad-8d33-e570034aaba0
 # ╟─0b592f6b-a856-45d7-92f2-c33fe3c86950
 # ╟─7fa07010-6422-4bef-8f7c-70ee9a2a0254
