@@ -1945,8 +1945,38 @@ md"### Other Constraint Qualifications"
 # ╔═╡ ff85953a-048f-4314-ad82-9ce922e232b6
 md"# Chapter 6: Lagrangian Duality and Saddle Point Optimality Conditions"
 
+# ╔═╡ 555e2f1d-640f-496d-ac2e-9b1323df0502
+md"## 6.1 Lagrangian Dual Problem"
+
 # ╔═╡ b18e856c-378d-47ad-8d33-e570034aaba0
-md"## Geometric Interpretation of the Dual Problem"
+md"### Geometric Interpretation of the Dual Problem"
+
+# ╔═╡ 8c230d77-c1ed-4d9b-b67d-c086bbb80b37
+md"## 6.2 Duality Theorems and Saddle Point Optimality Conditions"
+
+# ╔═╡ 42ba7707-68a1-40ff-afd2-e81f9384bd19
+md"### Duality Gap"
+
+# ╔═╡ 6ce9cbee-bb65-4734-b6de-898f836b821e
+let
+	f(x1,x2)=-2x1+x2
+	h(x1,x2)=x1+x2-3
+	X=[(0,0),(0,4),(4,4),(4,0),(1,2),(2,1)]
+	# map(p->h(p...),X)
+	G=map(p->(h(p...),f(p...)),X)
+	scatter(G,frame_style=:origin, xlabel=:h, ylabel=:f)
+	plot!(x->-2(x+3))
+	
+end
+
+# ╔═╡ b63c9fc0-1a3e-46a8-853b-c4c3083233fb
+md"### Saddle Point Criteria "
+
+# ╔═╡ f9aa0445-2fec-4ced-8863-cde6a361dfb1
+md"### Relationship Between the Saddle Point Criteria and the Karush-Kuhn-Tucker Conditions "
+
+# ╔═╡ 220ba36a-0a4d-4ea8-9290-7c1ed7dc8d2b
+md"### Saddle Point Optimality Interpretation Using a Perturbation Function"
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -1986,7 +2016,30 @@ begin
 	 ```
 	"""
 	end
-
+	function primal_problem()
+	cm"""
+	```math
+	 \begin{array}{lll}
+	 \min & f(\mathbf{x}) \\
+	 \text{subject to}\\
+	 & g(\mathbf{x})\leq 0 \\
+	 & h(\mathbf{x})= 0\\
+	 & \mathbf{x} \in X
+	 \end{array}
+	 ```
+	"""
+	end
+	function dual_problem()
+	cm"""
+	```math
+	 \begin{array}{lll}
+	 \max & \theta(\mathbf{u},\mathbf{v}) \\
+	 \text{subject to}\\
+	 & \mathbf{u} \ge 0
+	 \end{array}
+	 ```
+	"""
+	end	
 	function eql_latex_gi()
 	cm"""
 	```math
@@ -4813,6 +4866,176 @@ cm"""
 $(post_img("https://www.dropbox.com/scl/fi/1aswfuc2jscnh38aajjf2/fig6.2.png?rlkey=2arjmx8utbhlfg7dm1293sjvp&dl=1"))
 """
 
+# ╔═╡ 38b8e8fa-d5ea-48f7-999e-045b8452a3e4
+cm"""
+$(bth("6.2.1 Theorem (Weak Duality Theorem)"))
+
+Let ``\mathbf{x}`` be a feasible solution to Problem P 
+
+$(primal_problem())
+
+Also, let ( ``\mathbf{u}, \mathbf{v}`` ) be a feasible solution to Problem D
+
+$(dual_problem())
+
+Then 
+```math
+f(\mathbf{x}) \geq \theta(\mathbf{u}, \mathbf{v}).
+```
+"""
+
+# ╔═╡ 035d72de-5736-4759-be8d-606c142694c3
+cm"""
+
+$(bbl("Corollary 1",""))
+```math
+\inf \{f(\mathbf{x}): \mathbf{x} \in X, \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \mathbf{h}(\mathbf{x})=\mathbf{0}\} \geq \sup \{\theta(\mathbf{u}, \mathbf{v}): \mathbf{u} \geq \mathbf{0}\} .
+```
+$(ebl())
+
+$(bbl("Corollary 2",""))
+If ``f(\overline{\mathbf{x}})=\theta(\overline{\mathbf{u}}, \overline{\mathbf{v}})``, where ``\overline{\mathbf{u}} \geq \mathbf{0}`` and ``\overline{\mathbf{x}} \in\{\mathbf{x} \in X: \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \mathbf{h}(\mathbf{x})=\mathbf{0}\}``, then ``\overline{\mathbf{x}}`` and ``(\overline{\mathbf{u}}, \overline{\mathbf{v}})`` solve the primal and dual problems, respectively.
+$(ebl())
+
+$(bbl("Corollary 3",""))
+If ``\inf \{f(\mathbf{x}): \mathbf{x} \in X, \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \mathbf{h}(\mathbf{x})=\mathbf{0}\}=-\infty``, then ``\theta(\mathbf{u}, \mathbf{v})=-\infty`` for each ``\mathbf{u} \geq \mathbf{0}``.
+$(ebl())
+
+$(bbl("Corollary 4",""))
+If ``\sup \{\theta(\mathbf{u}, \mathbf{v}): \mathbf{u} \geq \mathbf{0}\}=\infty``, then the primal problem has no feasible solution.
+"""
+
+# ╔═╡ c35e914a-135f-4ce5-906a-3da0dae94029
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/z32q3mpqzeisz5lfj6iko/fig6.3.png?rlkey=k1ahlv95c0ipwvgw16lgt6p29&dl=1"))
+"""
+
+# ╔═╡ 473b3d31-aabe-4d60-b4e8-aab049915b0c
+cm"""
+$(ex("Example",""))
+Consider the following problem: 
+```math
+\begin{array}{lr}
+\text { Minimize } & f(x)=-2 x_1+x_2 \\
+\text { subject to } & h(x)= \\
+& x_1+x_2-3=0 \\
+& \left(x_1, x_2\right) \in X,
+\end{array}
+```
+where ``X=\{(0,0),(0,4),(4,4),(4,0),(1,2),(2,1)\}``.
+"""
+
+# ╔═╡ eec63cc8-418a-41d4-9b78-6307d51dcee6
+cm"""
+$(bbl("6.2.3 Lemma",""))
+
+Let ``X`` be a nonempty convex set in ``R^n``. Let ``\alpha: R^n \rightarrow R`` and ``\mathbf{g}: R^n \rightarrow R^m`` be convex, and let ``\mathbf{h}: R^n \rightarrow R^{\ell}`` be affine; that is, ``\mathbf{h}`` is of the form ``\mathbf{h}(\mathbf{x})=\mathbf{A x}-\mathbf{b}``. If System 1 below has no solution ``\mathbf{x}``, then System 2 has a solution ( ``u_0, \mathbf{u}, \mathbf{v}`` ). The converse holds true if ``u_0>0``.
+
+- System 1: ``\alpha(\mathbf{x})<0, \quad \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \quad \mathbf{h}(\mathbf{x})=\mathbf{0}`` for some ``\mathbf{x} \in X``
+- System 2: ``u_0 \alpha(\mathbf{x})+\mathbf{u}^t \mathbf{g}(\mathbf{x})+\mathbf{v}^t \mathbf{h}(\mathbf{x}) \geq 0 \quad`` for all ``\mathbf{x} \in X``
+```math
+\left(u_0, \mathbf{u}\right) \geq \mathbf{0}, \quad\left(u_0, \mathbf{u}, \mathbf{v}\right) \neq \mathbf{0}
+```
+"""
+
+# ╔═╡ 63aa4da3-a220-4002-8efd-77452b4cb291
+cm"""
+$(bth("6.2.4 (Strong Duality Theorem)"))
+
+Let ``X`` be a nonempty convex set in ``R^n``, let ``f: R^n \rightarrow R`` and ``\mathbf{g}: R^n \rightarrow R^m`` be convex, and let ``\mathbf{h}: R^n \rightarrow R^{\ell}`` be affine; that is, ``\mathbf{h}`` is of the form ``\mathbf{h}(\mathbf{x})=\mathbf{A x}-\mathbf{b}``. Suppose that the following constraint qualification holds true. There exists an ``\hat{\mathbf{x}} \in X`` such that ``\mathbf{g}(\hat{\mathbf{x}})<\mathbf{0}`` and ``\mathbf{h}(\hat{\mathbf{x}})=\mathbf{0}``, and ``\mathbf{0} \in \operatorname{int} \mathbf{h}(X)``, where ``\mathbf{h}(X)=\{\mathbf{h}(\mathbf{x}): \mathbf{x} \in X\}``. Then
+```math
+\inf \{f(\mathbf{x}): \mathbf{x} \in X, \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \mathbf{h}(\mathbf{x})=\mathbf{0}\}=\sup \{\theta(\mathbf{u}, \mathbf{v}): \mathbf{u} \geq \mathbf{0}\} .
+```
+
+Furthermore, if the ``\inf`` is finite, then ``\sup \{\theta(\mathbf{u}, \mathbf{v}): \mathbf{u} \geq \mathbf{0}\}`` is achieved at ``(\overline{\mathbf{u}}, \overline{\mathbf{v}})`` with ``\overline{\mathbf{u}} \geq \mathbf{0}``. If the ``\inf`` is achieved at ``\overline{\mathbf{x}}``, then ``\overline{\mathbf{u}}^t \mathbf{g}(\overline{\mathbf{x}})=0``.
+"""
+
+# ╔═╡ 2e811d20-683b-4458-80f0-7caca6b38cef
+cm""""
+$(define("Saddle Points"))
+
+Given the primal Problem P, 
+$(primal_problem())
+
+we define the __Lagrangian function__
+```math
+\phi(\mathbf{x}, \mathbf{u}, \mathbf{v})=f(\mathbf{x})+\mathbf{u}^t \mathbf{g}(\mathbf{x})+\mathbf{v}^t \mathbf{h}(\mathbf{x}) .
+```
+
+A solution ( ``\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}}`` ) is called a __saddle point__ of the Lagrangian function if ``\overline{\mathbf{x}} \in X``, ``\overline{\mathbf{u}} \geq \mathbf{0}``, and
+```math
+\phi(\overline{\mathbf{x}}, \mathbf{u}, \mathbf{v}) \leq \phi(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}}) \leq \phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}})
+```
+for all ``\mathbf{x} \in X``, and all ``(\mathbf{u}, \mathbf{v})`` with ``\mathbf{u} \geq \mathbf{0}``.
+
+Hence, we have that ``\overline{\mathbf{x}}`` minimizes ``\phi`` over ``X`` when ( ``\mathbf{u}, \mathbf{v}`` ) is fixed at ( ``\overline{\mathbf{u}}, \overline{\mathbf{v}}`` ), and that ``(\overline{\mathbf{u}}, \overline{\mathbf{v}})`` maximizes ``\phi`` over all ``(\mathbf{u}, \mathbf{v})`` with ``\overline{\mathbf{u}} \geq \mathbf{0}`` when ``\mathbf{x}`` is fixed at ``\overline{\mathbf{x}}``. 
+"""
+
+# ╔═╡ d1166bf0-aac7-455a-ad7b-3002e7fb9ff6
+cm"""
+$(bth("6.2.5 (Saddle Point Optimality and Absence of a Duality Gap)"))
+
+A solution ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` with ``\overline{\mathbf{x}} \in X`` and ``\overline{\mathbf{u}} \geq \mathbf{0}`` is a saddle point for the Lagrangian function ``\phi(\mathbf{x}, \mathbf{u}, \mathbf{v})=f(\mathbf{x})+\mathbf{u}^t \mathbf{g}(\mathbf{x})+\mathbf{v}^t \mathbf{h}(\mathbf{x})`` if and only if
+
+- a.  ``\phi(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})=\min \{\phi(\mathbf{x}, \overline{\mathbf{u}}, \overline{\mathbf{v}}): \mathbf{x} \in X\}``,
+- b. ``\quad \mathbf{g}(\overline{\mathbf{x}}) \leq \mathbf{0}, \mathbf{h}(\overline{\mathbf{x}})=\mathbf{0}``, and
+- c. ``\quad \overline{\mathbf{u}}^t \mathbf{g}(\overline{\mathbf{x}})=0``.
+
+Moreover, ( ``\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}}`` ) is a saddle point if and only if ``\overline{\mathbf{x}}`` and ``(\overline{\mathbf{u}}, \overline{\mathbf{v}})`` are, respectively, optimal solutions to the primal and dual problems P and D with no duality gap, that is, with ``f(\overline{\mathbf{x}})=\theta(\overline{\mathbf{u}}, \overline{\mathbf{v}})``.
+"""
+
+# ╔═╡ d6cfc763-40ad-4c4f-826e-ae15a4bdd5aa
+cm"""
+$(bbl("Corollary",""))
+Suppose that ``X, f``, and ``\mathbf{g}`` are convex and that ``\mathbf{h}`` is affine; that is, ``\mathbf{h}`` is of the form ``\mathbf{h}(\mathbf{x})=\mathbf{A x}-\mathbf{b}``. Further, suppose that ``\mathbf{0} \in \operatorname{int} \mathbf{h}(X)`` and that there exists an ``\hat{\mathbf{x}} \in X`` with ``\mathbf{g}(\hat{\mathbf{x}})<\mathbf{0}`` and ``\mathbf{h}(\hat{\mathbf{x}})=\mathbf{0}``. If ``\overline{\mathbf{x}}`` is an optimal solution to the primal Problem P , there exists a vector ``(\overline{\mathbf{u}}, \overline{\mathbf{v}})`` with ``\overline{\mathbf{u}} \geq \mathbf{0}`` such that ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` is a saddle point.
+"""
+
+# ╔═╡ dbcea617-9919-42d8-8fe3-90629f25ed96
+cm"""
+$(bth("6.2.6"))
+
+Let ``S=\{\mathbf{x} \in X: \mathbf{g}(\mathbf{x}) \leq \mathbf{0}, \mathbf{h}(\mathbf{x})=\mathbf{0}\}``, and consider Problem P to minimize ``f(\mathbf{x})`` subject to ``\mathbf{x} \in S``. Suppose that ``\overline{\mathbf{x}} \in S`` satisfies the KKT conditions; that is, there exist ``\overline{\mathbf{u}} \geq \mathbf{0}`` and ``\overline{\mathbf{v}}`` such that
+```math
+\begin{aligned}
+\nabla f(\overline{\mathbf{x}})+\nabla \mathbf{g}(\overline{\mathbf{x}})^t \overline{\mathbf{u}}+\nabla \mathbf{h}(\overline{\mathbf{x}})^t \overline{\mathbf{v}} & =\mathbf{0} \\
+\overline{\mathbf{u}}^t \mathbf{g}(\overline{\mathbf{x}}) & =0
+\end{aligned}\tag{*}
+```
+
+Suppose that ``f`` and ``g_i`` for ``i \in I`` are convex at ``\overline{\mathbf{x}}``, where ``I=\left\{i: g_i(\overline{\mathbf{x}})=0\right\}``. Further, suppose that if ``\bar{v}_i \neq 0``, then ``h_i`` is affine. Then ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` is a saddle point for the Lagrangian function ``\phi(\mathbf{x}, \mathbf{u}, \mathbf{v})=f(\mathbf{x})+\mathbf{u}^t \mathbf{g}(\mathbf{x})+\mathbf{v}^t \mathbf{h}(\mathbf{x})``.
+
+Conversely, suppose that ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` with ``\overline{\mathbf{x}} \in \operatorname{int} X`` and ``\overline{\mathbf{u}} \geq \mathbf{0}`` is a saddle point solution. Then ``\overline{\mathbf{x}}`` is feasible to Problem P , and furthermore, ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` satisfies the KKT conditions specified by (*).
+"""
+
+# ╔═╡ 17b64bfb-f12f-494e-a82f-400e007f0d68
+cm"""
+Consider the primal Problem P 
+
+$(primal_problem())
+
+and define the perturbation function ``v`` : ``R^{m+\ell} \rightarrow R`` as the optimal value function of the following problem, where ``\mathbf{y}= \left(y_1, \ldots, y_m, y_{m+1}, \ldots, y_{m+\ell}\right):``
+```math
+\begin{aligned}
+& v(\mathbf{y})=\min \left\{f(\mathbf{x}): g_i(\mathbf{x}) \leq y_i \text { for } i=1, \ldots, m,\right. \\
+& \left.\qquad h_i(\mathbf{x})=y_{m+i} \text { for } i=1, \ldots, \ell, \mathbf{x} \in X\right\} .
+\end{aligned}
+```
+"""
+
+# ╔═╡ 90534b4c-ffb5-43aa-85e6-2761846b4a32
+cm"""
+$(bth("6.2.7"))
+
+Consider the primal Problem P, 
+$(primal_problem())
+
+and assume that an optimal solution ``\overline{\mathbf{x}}`` to this problem exists. Then ``(\overline{\mathbf{x}}, \overline{\mathbf{u}}, \overline{\mathbf{v}})`` is a saddle point for the Lagrangian function ``\phi(\mathbf{x}, \mathbf{u}, \mathbf{v})=f(\mathbf{x})+\mathbf{u}^t \mathbf{g}(\mathbf{x})+\mathbf{v}^t \mathbf{h}(\mathbf{x})`` if and only if
+```math
+v(\mathbf{y}) \geq v(\mathbf{0})-\left(\overline{\mathbf{u}}^t, \overline{\mathbf{v}}^t\right) \mathbf{y} \quad \text { for all } \mathbf{y} \in R^{m+\ell},
+```
+that is, if and only if the hyperplane ``z=v(0)-\left(\overline{\mathbf{u}}^t, \overline{\mathbf{v}}^t\right) \mathbf{y}`` supports the epigraph ``\left\{(\mathbf{y}, z): z \geq v(\mathbf{y}), \mathbf{y} \in R^{m+\ell}\right\}`` of ``v`` at the point ``(\mathbf{y}, z)=(\mathbf{0}, v(\mathbf{0}))``.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -6779,6 +7002,7 @@ version = "1.8.1+0"
 # ╟─10eb7bc5-9ff8-4257-aac5-0ede766671c1
 # ╟─c167a557-543b-4fda-b492-1723546e0adf
 # ╟─ff85953a-048f-4314-ad82-9ce922e232b6
+# ╟─555e2f1d-640f-496d-ac2e-9b1323df0502
 # ╟─154a2bc5-4614-4f25-b0cf-e31febe4ce4d
 # ╟─86087922-ac55-4595-92c5-27fabc10aac6
 # ╟─b18e856c-378d-47ad-8d33-e570034aaba0
@@ -6786,6 +7010,24 @@ version = "1.8.1+0"
 # ╟─7fa07010-6422-4bef-8f7c-70ee9a2a0254
 # ╟─8042d4e4-bca7-4674-a6a6-9298635b6ee0
 # ╟─3904638a-43bf-443b-97f5-8ce42bf28ba6
+# ╟─8c230d77-c1ed-4d9b-b67d-c086bbb80b37
+# ╟─38b8e8fa-d5ea-48f7-999e-045b8452a3e4
+# ╟─035d72de-5736-4759-be8d-606c142694c3
+# ╟─42ba7707-68a1-40ff-afd2-e81f9384bd19
+# ╟─c35e914a-135f-4ce5-906a-3da0dae94029
+# ╟─473b3d31-aabe-4d60-b4e8-aab049915b0c
+# ╠═6ce9cbee-bb65-4734-b6de-898f836b821e
+# ╟─eec63cc8-418a-41d4-9b78-6307d51dcee6
+# ╟─63aa4da3-a220-4002-8efd-77452b4cb291
+# ╟─b63c9fc0-1a3e-46a8-853b-c4c3083233fb
+# ╟─2e811d20-683b-4458-80f0-7caca6b38cef
+# ╟─d1166bf0-aac7-455a-ad7b-3002e7fb9ff6
+# ╟─d6cfc763-40ad-4c4f-826e-ae15a4bdd5aa
+# ╟─f9aa0445-2fec-4ced-8863-cde6a361dfb1
+# ╟─dbcea617-9919-42d8-8fe3-90629f25ed96
+# ╟─220ba36a-0a4d-4ea8-9290-7c1ed7dc8d2b
+# ╟─17b64bfb-f12f-494e-a82f-400e007f0d68
+# ╟─90534b4c-ffb5-43aa-85e6-2761846b4a32
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
