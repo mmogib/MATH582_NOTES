@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.20.14
+# v0.20.20
 
 using Markdown
 using InteractiveUtils
@@ -1962,7 +1962,7 @@ let
 	f(x1,x2)=-2x1+x2
 	h(x1,x2)=x1+x2-3
 	X=[(0,0),(0,4),(4,4),(4,0),(1,2),(2,1)]
-	# map(p->h(p...),X)
+	map(Δ->h(Δ[1],Δ[2]),X)
 	G=map(p->(h(p...),f(p...)),X)
 	scatter(G,frame_style=:origin, xlabel=:h, ylabel=:f)
 	plot!(x->-2(x+3))
@@ -1977,6 +1977,27 @@ md"### Relationship Between the Saddle Point Criteria and the Karush-Kuhn-Tucker
 
 # ╔═╡ 220ba36a-0a4d-4ea8-9290-7c1ed7dc8d2b
 md"### Saddle Point Optimality Interpretation Using a Perturbation Function"
+
+# ╔═╡ 95d822f3-2aaf-4c0c-b3c5-891606fd75a4
+md"## 6.3 Properties of the Dual Function"
+
+# ╔═╡ 5464d90c-5e73-40fa-9e33-0382913c629e
+md"### Differentiability of θ"
+
+# ╔═╡ db544c89-1f5f-4aba-b607-97a14511d387
+cm"""
+Define the Lagrangian subproblem
+```math
+\DeclareMathOperator{\argmin}{argmin}
+\chi(\mathbf{w}) = \left\{y : y \text{ minimizes } f(\mathbf{x}) + \mathbf{w}^t\beta(\mathbf{x}) \text{ over } x\in X\right\}=\argmin_{\mathbf{x}\in X}{\left\{f(\mathbf{x}) + \mathbf{w}^t\beta(\mathbf{x})\right\}}
+```
+"""
+
+# ╔═╡ 113c80fd-bd02-4623-8c8b-4e472280e5fc
+md"### Subgradients of θ"
+
+# ╔═╡ 298a22a1-2ce4-4c78-912a-d9639207010b
+md"### Ascent and Steepest Ascent Directions "
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -2138,12 +2159,16 @@ begin
         beginBlock(t, s)
     end
     ebl() = endBlock()
+	
+	function bth(s)
+        beginTheorem(s)
+    end
+	
     function theorem(s)
         bth(s)
     end
-    function bth(s)
-        beginTheorem(s)
-    end
+    lemma(s)= beginBlock("Lemma", s)
+    elemma(s)= endBlock()
     eth() = endTheorem()
     ex(n::Int; s::String="") = ex("Example $n", s)
     ex(t::Int, s::String) = example("Example $t", s)
@@ -4917,9 +4942,10 @@ Consider the following problem:
 ```math
 \begin{array}{lr}
 \text { Minimize } & f(x)=-2 x_1+x_2 \\
-\text { subject to } & h(x)= \\
+\text { subject to } &\\ 
+&h(x)=
 & x_1+x_2-3=0 \\
-& \left(x_1, x_2\right) \in X,
+&& \left(x_1, x_2\right) \in X,
 \end{array}
 ```
 where ``X=\{(0,0),(0,4),(4,4),(4,0),(1,2),(2,1)\}``.
@@ -5036,6 +5062,150 @@ v(\mathbf{y}) \geq v(\mathbf{0})-\left(\overline{\mathbf{u}}^t, \overline{\mathb
 that is, if and only if the hyperplane ``z=v(0)-\left(\overline{\mathbf{u}}^t, \overline{\mathbf{v}}^t\right) \mathbf{y}`` supports the epigraph ``\left\{(\mathbf{y}, z): z \geq v(\mathbf{y}), \mathbf{y} \in R^{m+\ell}\right\}`` of ``v`` at the point ``(\mathbf{y}, z)=(\mathbf{0}, v(\mathbf{0}))``.
 """
 
+# ╔═╡ a1f6af1d-c9bb-412c-ba00-c1fb585d9f5b
+cm"""
+$(bth("6.3.1"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. Then ``\theta``, defined by
+```math
+\theta(\mathbf{w})=\inf \left\{f(\mathbf{x})+\mathbf{w}^t \beta(\mathbf{x}): \mathbf{x} \in X\right\},
+```
+is concave over ``R^{m+\ell}``.
+"""
+
+# ╔═╡ 382953ce-4fe4-4c96-a01f-2a35d3c57552
+cm"""
+$(lemma("6.3.2"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. Let ``\overline{\mathbf{w}} \in R^{m+\ell}``, and suppose that ``X(\overline{\mathbf{w}})`` is the singleton ``\{\overline{\mathbf{x}}\}``. Suppose that ``\mathbf{w}_k \rightarrow \overline{\mathbf{w}}``, and let ``\mathbf{x}_k \in X\left(\mathbf{w}_k\right)`` for each ``k``. Then ``\mathbf{x}_k \rightarrow \overline{\mathbf{x}}``.
+"""
+
+# ╔═╡ 2aa3b1ae-ab85-4799-a5d7-44b2b264b9b5
+cm"""
+$(theorem("6.3.3"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R``, and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. Let ``\overline{\mathbf{w}} \in R^{m+\ell}`` and suppose that ``X(\overline{\mathbf{w}})`` is the singleton ``\{\overline{\mathbf{x}}\}``. Then ``\theta`` is differentiable at ``\overline{\mathbf{w}}`` with gradient ``\nabla \theta(\overline{\mathbf{w}})=\beta(\overline{\mathbf{x}})``.
+"""
+
+# ╔═╡ 8f1e8c4e-3fab-4e5a-89c1-ebdfa93a203a
+cm"""
+$(theorem("6.3.4"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous so that for any ``\overline{\mathbf{w}} \in R^{m+\ell}, X(\overline{\mathbf{w}})`` is not empty. If ``\overline{\mathbf{x}} \in X(\overline{\mathbf{w}})``, then ``\beta(\overline{\mathbf{x}})`` is a subgradient of ``\theta`` at ``\overline{\mathbf{w}}``.
+"""
+
+# ╔═╡ 74e6676d-60f8-4766-ad62-555ade14e9b6
+cm"""
+$(ex("Example","6.3.5"))
+Read this example
+"""
+
+# ╔═╡ 6a44f931-02c3-4aa4-8949-51cbbc9cfdb3
+cm"""
+$(theorem("6.3.6"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. Let ``\overline{\mathbf{w}}, \mathbf{d} \in R^{m+\ell}``. Then the directional derivative of ``\theta`` at ``\overline{\mathbf{w}}`` in the direction ``\mathbf{d}`` satisfies
+```math
+\theta^{\prime}(\overline{\mathbf{w}} ; \mathbf{d}) \geq \mathbf{d}^t \beta(\overline{\mathbf{x}}) \quad \text { for some } \overline{\mathbf{x}} \in X(\overline{\mathbf{w}}) .
+```
+"""
+
+# ╔═╡ aabca99b-af4b-490a-93a6-0c23ab0b5d8a
+cm"""
+$(bbl("Corollary",""))
+Let ``\partial \theta(\overline{\mathbf{w}})`` be the collection of subgradients of ``\theta`` at ``\overline{\mathbf{w}}``, and suppose that the assumptions of the theorem hold true. Then
+```math
+\theta^{\prime}(\overline{\mathbf{w}} ; \mathbf{d})=\inf \left\{\mathbf{d}^t \xi: \xi \in \partial \theta(\overline{\mathbf{w}})\right\} .
+```
+"""
+
+# ╔═╡ 64af53c2-9fb7-417f-a7cd-1b93acc134df
+cm"""
+$(theorem("6.3.7"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. Then ``\xi`` is a subgradient of ``\theta`` at ``\overline{\mathbf{w}} \in R^{m+\ell}`` if and only if ``\xi`` belongs to the convex hull of ``\{\beta(\mathbf{y}): \mathbf{y} \in X(\overline{\mathbf{w}})\}``.
+"""
+
+# ╔═╡ c1385372-6287-4e8c-bbf6-8fef51eb2f58
+cm"""
+$(define("6.3.9"))
+
+A vector ``\mathbf{d}`` is called an ascent direction of ``\theta`` at ``\mathbf{w}`` if there exists a ``\delta>0`` such that
+```math
+\theta(\mathbf{w}+\lambda \mathbf{d})>\theta(\mathbf{w}) \quad \text { for each } \lambda \in(0, \delta)
+```
+"""
+
+# ╔═╡ c6fd6745-7deb-4ca8-ad3f-2b1d70c6a6d2
+cm"""
+$(remarks())
+
+- Note that if ``\theta`` is concave, a vector ``\mathbf{d}`` is an __ascent direction__ of ``\theta`` at ``\mathbf{w}`` if and only if ``\theta^{\prime}(\mathbf{w} ; \mathbf{d})>0``. 
+
+- Furthermore, ``\theta`` assumes its maximum at ``\mathbf{w}`` if and only if it has no ascent directions at ``\mathbf{w}``, that is, if and only if ``\theta^{\prime}(\mathbf{w} ; \mathbf{d}) \leq 0`` for each ``\mathbf{d}``.
+
+- Using the corollary to Theorem 6.3.6, it follows that a vector ``\mathbf{d}`` is an ascent direction of ``\theta`` at ``\mathbf{w}`` if and only if ``\inf \left\{\mathbf{d}^t \xi: \xi \in \partial \theta(\mathbf{w})\right\}>0``, that is, if and only if the following inequality holds true for some ``\varepsilon>0``.
+```math
+\mathbf{d}^t \xi \geq \varepsilon>0 \quad \text { for each } \xi \in \partial \theta(\mathbf{w}) .
+```
+"""
+
+# ╔═╡ 3ecaaa39-4dc1-4c0e-97c0-21e26546e693
+cm"""
+$(define("6.3.10"))
+
+A vector ``\overline{\mathbf{d}}`` is called a direction of steepest ascent of ``\theta`` at ``\mathbf{w}`` if
+```math
+\theta^{\prime}(\mathbf{w} ; \overline{\mathbf{d}})=\max _{\|\mathbf{d}\| \leq 1} \theta^{\prime}(\mathbf{w} ; \mathbf{d})
+```
+"""
+
+# ╔═╡ 97d0eb0c-928d-424b-8c22-35e394e30a03
+cm"""
+$(theorem("6.3.11"))
+
+Let ``X`` be a nonempty compact set in ``R^n``, and let ``f: R^n \rightarrow R`` and ``\beta: R^n \rightarrow R^{m+\ell}`` be continuous. The direction of steepest ascent ``\overline{\mathbf{d}}`` of ``\theta`` at ``\mathbf{w}`` is given below, where ``\bar{\xi}`` is the subgradient in ``\partial \theta(\mathbf{w})`` having the smallest Euclidean norm:
+```math
+\overline{\mathbf{d}}= \begin{cases}0 & \text { if } \bar{\xi}=0 \\ \frac{\bar{\xi}}{\|\bar{\xi}\|} & \text { if } \bar{\xi} \neq 0\end{cases}
+```
+"""
+
+# ╔═╡ 306e1385-ea56-458f-8d81-3bbd58e17bf7
+cm"""
+$(bbl("Summary",""))
+The dual function 
+```math
+\theta(\mathbf{w})=\inf \left\{f(\mathbf{x})+\mathbf{w}^t \beta(\mathbf{x}): \mathbf{x} \in X\right\},
+```
+and the Lagrangian subproblem
+```math
+\DeclareMathOperator{\argmin}{argmin}
+\chi(\mathbf{w}) = \left\{y : y \text{ minimizes } f(\mathbf{x}) + \mathbf{w}^t\beta(\mathbf{x}) \text{ over } x\in X\right\}=\argmin_{\mathbf{x}\in X}{\left\{f(\mathbf{x}) + \mathbf{w}^t\beta(\mathbf{x})\right\}}
+```
+have the following proerties
+1. ``\theta`` is concave
+2. ``\theta`` is differentiable at ``\bar{w}`` if ``\chi(\bar{w})=\{\bar{x}\}`` is a singleton. (``\nabla \theta(\bar{w})=\beta(\bar{x})``)
+2. ``\beta(\bar{x})`` is a subgradient of ``\theta`` at ``\bar{w}`` if ``\bar{x} \in \chi(\bar{w})``.
+"""
+
+# ╔═╡ 7f141fd0-54d9-4db1-adae-170b76092553
+cm"""
+$(ex("Example","6.3.8"))
+
+Consider the following primal problem:
+
+```math
+\begin{array}{lcll}
+\min&-\left(x_1-4\right)^2-\left(x_2-4\right)^2  \\
+\text { subject to } \\
+&x_1-3 &\leq  0 \\
+&-x_1+x_2-2 & \leq 0 \\
+&x_1+x_2-4 & \leq 0 \\
+&x_1, x_2 & \geq 0 .
+\end{array}
+```
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -5076,9 +5246,9 @@ QRCoders = "~1.4.5"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.11.6"
+julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "d9dac5ca2be7c023aa422d3b7b2ed3f4451f10dc"
+project_hash = "e733f55d43f04a3f39d1212f6943cfba19687caa"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -5207,7 +5377,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.1.1+0"
+version = "1.3.0+1"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -5640,6 +5810,11 @@ git-tree-sha1 = "eac1206917768cb54957c65a615460d87b455fc1"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "3.1.1+0"
 
+[[deps.JuliaSyntaxHighlighting]]
+deps = ["StyledStrings"]
+uuid = "ac6e5ff7-fb65-4e79-a425-ec3bc9c03011"
+version = "1.12.0"
+
 [[deps.LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "170b660facf5df5de098d866564877e119141cbd"
@@ -5698,24 +5873,24 @@ uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
 version = "0.6.4"
 
 [[deps.LibCURL_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "8.6.0+0"
+version = "8.11.1+1"
 
 [[deps.LibGit2]]
-deps = ["Base64", "LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
+deps = ["LibGit2_jll", "NetworkOptions", "Printf", "SHA"]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 version = "1.11.0"
 
 [[deps.LibGit2_jll]]
-deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll"]
+deps = ["Artifacts", "LibSSH2_jll", "Libdl", "OpenSSL_jll"]
 uuid = "e37daf67-58a4-590a-8e99-b0245dd2ffc5"
-version = "1.7.2+0"
+version = "1.9.0+0"
 
 [[deps.LibSSH2_jll]]
-deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
+deps = ["Artifacts", "Libdl", "OpenSSL_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.11.0+1"
+version = "1.11.3+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -5760,7 +5935,7 @@ version = "2.41.0+0"
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "OpenBLAS_jll", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-version = "1.11.0"
+version = "1.12.0"
 
 [[deps.LittleCMS_jll]]
 deps = ["Artifacts", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll"]
@@ -5816,7 +5991,7 @@ uuid = "299715c1-40a9-479a-aaf9-4a633d36f717"
 version = "0.1.11"
 
 [[deps.Markdown]]
-deps = ["Base64"]
+deps = ["Base64", "JuliaSyntaxHighlighting", "StyledStrings"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 version = "1.11.0"
 
@@ -5833,7 +6008,8 @@ uuid = "739be429-bea8-5141-9913-cc70e7f3736d"
 version = "1.1.9"
 
 [[deps.MbedTLS_jll]]
-deps = ["Artifacts", "Libdl"]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "926c6af3a037c68d02596a44c22ec3595f5f760b"
 uuid = "c8ffd9c3-330d-5841-b78e-0817d7145fa1"
 version = "2.28.6+0"
 
@@ -5860,7 +6036,7 @@ version = "0.3.4"
 
 [[deps.MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
-version = "2023.12.12"
+version = "2025.5.20"
 
 [[deps.MutableArithmetics]]
 deps = ["LinearAlgebra", "SparseArrays", "Test"]
@@ -5882,7 +6058,7 @@ version = "1.1.1"
 
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
-version = "1.2.0"
+version = "1.3.0"
 
 [[deps.OffsetArrays]]
 git-tree-sha1 = "117432e406b5c023f665fa73dc26e79ec3630151"
@@ -5904,7 +6080,7 @@ version = "1.3.5+1"
 [[deps.OpenBLAS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
 uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
-version = "0.3.27+1"
+version = "0.3.29+0"
 
 [[deps.OpenEXR]]
 deps = ["Colors", "FileIO", "OpenEXR_jll"]
@@ -5927,7 +6103,7 @@ version = "2.5.4+0"
 [[deps.OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
-version = "0.8.5+0"
+version = "0.8.7+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -5936,10 +6112,9 @@ uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
 version = "1.5.0"
 
 [[deps.OpenSSL_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "9216a80ff3682833ac4b733caa8c00390620ba5d"
+deps = ["Artifacts", "Libdl"]
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.5.0+0"
+version = "3.5.1+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
@@ -5961,7 +6136,7 @@ version = "1.8.1"
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
-version = "10.42.0+1"
+version = "10.44.0+1"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
@@ -5996,7 +6171,7 @@ version = "0.44.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.11.0"
+version = "1.12.0"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
@@ -6092,6 +6267,7 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
 [[deps.Profile]]
+deps = ["StyledStrings"]
 uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 version = "1.11.0"
 
@@ -6138,7 +6314,7 @@ uuid = "e99dba38-086e-5de3-a5b1-6e4c66e897c3"
 version = "6.8.2+0"
 
 [[deps.REPL]]
-deps = ["InteractiveUtils", "Markdown", "Sockets", "StyledStrings", "Unicode"]
+deps = ["InteractiveUtils", "JuliaSyntaxHighlighting", "Markdown", "Sockets", "StyledStrings", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 version = "1.11.0"
 
@@ -6237,7 +6413,7 @@ version = "1.2.1"
 [[deps.SparseArrays]]
 deps = ["Libdl", "LinearAlgebra", "Random", "Serialization", "SuiteSparse_jll"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-version = "1.11.0"
+version = "1.12.0"
 
 [[deps.SpecialFunctions]]
 deps = ["IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -6344,7 +6520,7 @@ version = "1.11.0"
 [[deps.SuiteSparse_jll]]
 deps = ["Artifacts", "Libdl", "libblastrampoline_jll"]
 uuid = "bea87d4a-7f5b-5778-9afe-8cc45184846c"
-version = "7.7.0+0"
+version = "7.8.3+2"
 
 [[deps.TOML]]
 deps = ["Dates"]
@@ -6621,7 +6797,7 @@ version = "1.6.0+0"
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
-version = "1.2.13+1"
+version = "1.3.1+2"
 
 [[deps.Zstd_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -6656,7 +6832,7 @@ version = "0.15.2+0"
 [[deps.libblastrampoline_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
-version = "5.11.0+0"
+version = "5.15.0+0"
 
 [[deps.libdecor_jll]]
 deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
@@ -6709,12 +6885,12 @@ version = "1.1.7+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.59.0+0"
+version = "1.64.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
-version = "17.4.0+2"
+version = "17.5.0+2"
 
 [[deps.x264_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -7028,6 +7204,25 @@ version = "1.8.1+0"
 # ╟─220ba36a-0a4d-4ea8-9290-7c1ed7dc8d2b
 # ╟─17b64bfb-f12f-494e-a82f-400e007f0d68
 # ╟─90534b4c-ffb5-43aa-85e6-2761846b4a32
+# ╟─95d822f3-2aaf-4c0c-b3c5-891606fd75a4
+# ╟─a1f6af1d-c9bb-412c-ba00-c1fb585d9f5b
+# ╟─5464d90c-5e73-40fa-9e33-0382913c629e
+# ╟─db544c89-1f5f-4aba-b607-97a14511d387
+# ╟─382953ce-4fe4-4c96-a01f-2a35d3c57552
+# ╟─2aa3b1ae-ab85-4799-a5d7-44b2b264b9b5
+# ╟─113c80fd-bd02-4623-8c8b-4e472280e5fc
+# ╟─8f1e8c4e-3fab-4e5a-89c1-ebdfa93a203a
+# ╟─74e6676d-60f8-4766-ad62-555ade14e9b6
+# ╟─6a44f931-02c3-4aa4-8949-51cbbc9cfdb3
+# ╟─aabca99b-af4b-490a-93a6-0c23ab0b5d8a
+# ╟─64af53c2-9fb7-417f-a7cd-1b93acc134df
+# ╟─298a22a1-2ce4-4c78-912a-d9639207010b
+# ╟─c1385372-6287-4e8c-bbf6-8fef51eb2f58
+# ╟─c6fd6745-7deb-4ca8-ad3f-2b1d70c6a6d2
+# ╟─3ecaaa39-4dc1-4c0e-97c0-21e26546e693
+# ╟─97d0eb0c-928d-424b-8c22-35e394e30a03
+# ╟─306e1385-ea56-458f-8d81-3bbd58e17bf7
+# ╟─7f141fd0-54d9-4db1-adae-170b76092553
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
