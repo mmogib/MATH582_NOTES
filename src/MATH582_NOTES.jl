@@ -2107,8 +2107,196 @@ let
 	F = λ0*f(x0) + λ1*f(x1)
 	G = λ0*g(x0) + λ1*g(x1) 
 	x1bar = (2//5)*x0 + (3//5)*x1
-	f(x1bar), X(x1bar), isFeasible(x1bar)
+	f(x1bar)
+	# , X(x1bar), isFeasible(x1bar)
 end
+
+# ╔═╡ 2741a669-3fd0-4eb7-ab11-ae200f2b4f53
+md"""# Chapter 8: Unconstrained Optimization
+## 8.1/8.5  Line Search Without Using Derivatives
+"""
+
+# ╔═╡ 0d3f2e1b-f1ef-4a4b-ab19-b3cd3512c665
+md"### Interval of Uncertainty "
+
+# ╔═╡ 6dde70d0-5d23-4ec4-b9cf-e1dbdddf01a2
+cm"""
+Consider the problem of minimizing the function in (🔵) over the interval ``[a,b]``. That is
+```math
+\min \theta(\lambda), \quad \text{subject to} \quad \lambda \in [a,b].
+```
+This interval is called the __interval ofuncertainty__.
+"""
+
+# ╔═╡ ed346f7c-2819-4dde-841b-944ff55dc329
+md"### Uniform Search "
+
+# ╔═╡ 1b74e57a-66ad-4c8a-a0f3-1a103b5d0bf7
+cm"""
+Uniform search is an example of __simultaneous search__, where we decide beforehand the points at which the functional evaluations are to be made. 
+
+The interval of uncertainty ``\left[a_1, b_1\right]`` is divided into smaller subintervals via the grid points 
+```math
+a_1+k \delta \quad \text{for} k=1, \ldots, n,
+```
+where ``b_1=a_1+(n+1) \delta``. 
+
+The function ``\theta`` is evaluated at each of the ``n`` grid points. Let ``\hat{\lambda}`` be a grid point having the smallest value of ``\theta``. If ``\theta`` is strictly quasiconvex, it follows that a minimum of ``\theta`` lies in the interval ``[\hat{\lambda}-\delta, \hat{\lambda}+\delta]``.
+"""
+
+# ╔═╡ 73a68ded-2090-4019-800e-b9e539a36e49
+let
+	f(x) = (x[1]-1)^2 + (x[2])^2 +x[1]*x[2]+2
+	d = [2.0;0.0]
+	x = [0.0;0.0]
+	θ(λ) = f(x + λ*d)
+	a1, b1 = -2.0 , 5.0
+	δ = 0.3
+	n = (1/δ)*(b1 - a1) - 1 
+	ak = [a1 + k*δ for k in 1:n+1]
+	θak = θ.(ak), argmin(θ.(ak)) 
+	plot(ak, θak; frame_style=:origin)
+end
+
+# ╔═╡ b44258cb-0f0f-497d-8ee7-ca61fe7bfa48
+md"""
+### Sequential Search
+"""
+
+# ╔═╡ 56a6de5a-586a-40a4-b9ac-b0055e3a906e
+cm"""
+As may be expected, more efficient procedures that utilize the information generated at the previous iterations in placing the subsequent iterate can be devised. Here, we discuss the following sequential search procedures: 
+- dichotomous search, 
+- the golden section method, and 
+- the Fibonacci method.
+"""
+
+# ╔═╡ 53904956-f967-4e03-bf7f-bcb505daeefa
+md"### Dichotomous Search"
+
+# ╔═╡ 28337e3a-6ea3-478e-ab8a-a722dfc2a720
+cm"""
+This formula can be used to 
+- determine the number of iterations needed to achieve the desired accuracy. 
+- Since each iteration requires two observations, the formula can also be used to determine the number of observations. 
+"""
+
+# ╔═╡ 8a7a1d87-592c-4b0e-8568-9931a13b1f02
+cm"""
+To compare the various line search procedures, the following reduction ratio 
+will be of use:
+```math
+
+\mathfrak{RR} = \frac{\text { length of interval of uncertainty after } v \text { observations are taken }}{\text { length of interval of uncertainty before taking the observations }}.
+```
+
+
+__Obviously, more efficient schemes correspond to small ratios__
+"""
+
+# ╔═╡ 870907d9-98c9-487e-9c7b-517a843ccf55
+function dichotomous_search(θ,a,b,l,ϵ; maxitrs::Int = 100, verbose::Bool = false)
+	@assert b>a "b must be greater than a"
+	# Markdown header
+    md = "| Iteration k | a_k | b_k | λ_k | μ_k | θ(λ_k) | θ(μ_k) |\n"
+    md *= "|---|---|---|---|---|---|---|\n"
+
+    if verbose
+        @printf("| Iteration k | a_k | b_k | λ_k | μ_k | θ(λ_k) | θ(μ_k) |\n")
+        @printf("|---|---|---|---|---|---|---|\n")
+    end
+	for k in 0:maxitrs
+		if b-a < l
+			verbose && @printf("Stop at k = %d: [a, b] = [%.8f, %.8f], length = %.8f\n",
+                               k, a, b, b - a)
+			return a, b, k - 1, md
+		end
+		c = (b+a)/2
+		λk, μk = c-ϵ, c+ϵ
+		θl, θm = θ.((λk, μk))
+		# format θ values and add a star to the smaller one (like in the book table)
+        sl = @sprintf("%.3f", θl)
+        sm = @sprintf("%.3f", θm)
+		if verbose
+            @printf("k = %3d | a = %.8f  b = %.8f  c = %.8f  λ = %.8f  μ = %.8f  θ(λ) = %.8f  θ(μ) = %.8f\n",
+                    k, a, b, c, λk, μk, θl, θm)
+        end
+		row = @sprintf("| %d | %.3f | %.3f | %.3f | %.3f | %s | %s |\n",
+                       k, a, b, λk, μk, sl, sm)
+        md *= row
+		a, b = if θl < θm
+			a, μk
+		else
+			λk, b
+		end
+		
+	end
+	return a, b, maxitrs, md
+end
+
+# ╔═╡ 12fa4649-2486-4943-b8ec-429c26f2397b
+let
+	a,b,iters,_ = dichotomous_search(x->x^2+2x,-3.0,5.0, 0.2, 1e-5;verbose=true)
+
+end
+
+# ╔═╡ 16c95cd6-c24f-4dda-b308-fc3f41cff239
+cm"""
+For __Dichotomous search__ 
+```math
+\mathfrak{RR} \approx (0.5)^{\nu/2}
+```
+where ``\nu`` is number of evaluations.
+"""
+
+# ╔═╡ b2b2ae35-3193-4e59-840c-2e72f93b0069
+md"### Golden Section Method "
+
+# ╔═╡ 449ee6cf-1893-4b77-9593-cec5f18a7983
+sqrt(1/2)
+
+# ╔═╡ 9b51df4c-2b5e-41b2-99f8-435b81665b58
+cm"""
+```math
+\mathfrak{RR} \approx (0.618)^{\nu -1}
+```
+"""
+
+# ╔═╡ f92394d4-1ecc-493c-bcb1-fe340c2afa8d
+function golden_search(θ,a,b,l,ϵ; maxitrs::Int = 100, verbose::Bool = false)
+	@assert b>a "b must be greater than a"
+	α1 = 0.681
+	α2 = 1-α1
+	d = b-a
+	λk, μk = a + α2*d, a + α1*d
+	@show  0.382*d, α2*d
+	θl, θm = θ.((λk, μk))
+	for k in 0:maxitrs
+		if b-a < l
+			verbose && @printf("Stop at k = %d: [a, b] = [%.8f, %.8f], length = %.8f\n",
+                               k, a, b, b - a)
+			return a,b,k
+		end
+		if verbose
+            @printf("k = %3d | a = %.8f  b = %.8f  λ = %.8f  μ = %.8f  θ(λ) = %.8f  θ(μ) = %.8f, length=%.4f\n",
+                    k, a, b, λk, μk, θl, θm, b-a)
+        end
+		a, b, λk, μk, θl, θm = if θl > θm
+			nμk =λk + α1*(b-λk)
+			λk, b, μk, nμk, θl, θ(nμk)
+		else
+			nλk = a + α2*(μk-a)
+			a, μk,nλk, λk, θ(nλk), θm
+		end
+	end
+	return a,b, k
+end
+
+# ╔═╡ 9646dc0a-d57b-411c-ac6f-c62af1549ad9
+ -3 + 0.382(8) 
+
+# ╔═╡ 3501c4d3-e24e-407e-a71d-776585016f3a
+golden_search(x->x^2+2x,-3.0,5.0, 0.2, 1e-5;verbose=true)
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -2136,6 +2324,15 @@ ul li:before {
 
 # ╔═╡ fdd3c3e3-5089-456f-adef-7ab2e311331f
 begin
+	function unconstrained_P()
+	cm"""
+	```math
+	 \begin{array}{llll}
+	 \min & f(x) & \text{subject to} & x \in \mathbb{R}^n
+	 \end{array}
+	 ```
+	"""
+	end
 	function min_latex_gi()
 	cm"""
 	```math
@@ -5637,6 +5834,82 @@ Note: The dual objective function is maximized at ``\bar{u}=1 / 5`` with ``\thet
 
 """
 
+# ╔═╡ ea6b54f9-3f0c-4270-8138-2ebd3440bdfd
+cm"""
+In this chapter, we solve
+$(unconstrained_P())
+🟥 Given a point ``\mathbf{x}_k``, find a direction vector ``\mathbf{d}_k`` and then a suitable step size ``\lambda_k``, yielding a new point 
+```math
+\mathbf{x}_{k+1}=\mathbf{x}_k+\lambda_k \mathbf{d}_k;
+```
+the process is then repeated. 
+
+🟥 Finding the step size ``\lambda_k`` involves solving the subproblem  
+```math 
+\min f\left(\mathbf{x}_k+\lambda \mathbf{d}_k\right),
+```
+which is a __one-dimensional search problem in the variable ``\lambda``__. 
+
+The minimization may be over all real ``\lambda``, nonnegative ``\lambda``, or ``\lambda`` such that ``\mathbf{x}_k+\lambda \mathbf{d}_k`` is feasible.
+
+Consider a function ``\theta`` of one variable ``\lambda`` defined as
+```math
+\theta(\lambda) = f(x + \lambda d) \tag{🔵}
+```
+to be minimized. 
+
+🟥 One approach to minimizing ``\theta`` is to set the derivative ``\theta^{\prime}`` equal to 0 and then solve for ``\lambda``. 
+🟥 Another is solve this problem without finiding derivatve.
+
+- __In section 8.1__: One dimensional means we solve for one step-size for each direction in every iteration.
+- __In section 8.5__: Multidimensional means we solve for mupltiple step-size for each multiple directions in every iteration.
+"""
+
+# ╔═╡ cff3cc2c-6441-4752-9ee6-c5baf23154a7
+cm"""
+$(theorem("8.1.1"))
+
+Let ``\theta : \mathbb{R} \rightarrow \mathbb{R}`` be strictly quasiconvex over the interval ``[a, b]``. Let ``\lambda, \mu \in[a, b]`` be such that ``\lambda<\mu``. 
+- If ``\theta(\lambda)>\theta(\mu)``, then ``\theta(z) \geq \theta(\mu)`` for all ``z \in[a, \lambda)``. 
+- If ``\theta(\lambda) \leq \theta(\mu)``, then ``\theta(z) \geq \theta(\lambda)`` for all ``\mathrm{z} \in(\mu, b]``.
+"""
+
+# ╔═╡ 16c81f53-dd35-4058-b09d-280703585e59
+cm"""
+$(bbl("Summary of the Dichotomous Search Method",""))
+Following is a summary of the dichotomous method for minimizing a strictly quasiconvex function ``\theta`` over the interval ``\left[a_1, b_1\right]``.
+
+__Initialization Step__ Choose the distinguishability constant, `` \varepsilon>0``, and the allowable final length of uncertainty, ``\ell>0``. Let ``\left[a_1, b_1\right]`` be the initial interval of uncertainty, let ``k=1``, and go to the Main Step.
+
+__Main Step__
+
+1. If ``b_k-a_k<\ell``, stop; the minimum point lies in the interval ``\left[a_k, b_k\right]``. Otherwise, consider ``\lambda_k`` and ``\mu_k`` defined below, and go to Step 2.
+```math
+\lambda_k=\frac{a_k+b_k}{2}-\varepsilon, \quad \mu_k=\frac{a_k+b_k}{2}+\varepsilon .
+```
+2. If ``\theta\left(\lambda_k\right)<\theta\left(\mu_k\right)``, let ``a_{k+1}=a_k`` and ``b_{k+1}=\mu_k``. Otherwise, let ``a_{k+1} =\lambda_k`` and ``b_{k+1}=b_k``. Replace ``k`` by ``k+1``, and go to Step 1.
+
+Note that the length of uncertainty at the beginning of iteration ``k+1`` is given by
+```math
+\left(b_{k+1}-a_{k+1}\right)=\frac{1}{2^k}\left(b_1-a_1\right)+2 \varepsilon\left(1-\frac{1}{2^k}\right) .
+```
+"""
+
+# ╔═╡ 59f960cb-46fb-4c02-bf79-49bf0fb58918
+cm"""
+$(bbl("Summary of the Golden Section Method"))
+
+Following is a summary of the golden section method for minimizing a strictly quasiconvex function over the interval ``\left[a_1, b_1\right]``.
+
+__Initialization Step__ Choose an allowable final length of uncertainty ``\ell>`` 0 . Let ``\left[a_1, b_1\right]`` be the initial interval of uncertainty, and let ``\lambda_1=a_1+(1-\alpha)\left(b_1-a_1\right)`` and ``\mu_1=a_1+\alpha\left(b_1-a_1\right)``, where ``\alpha=0.618``. Evaluate ``\theta\left(\lambda_1\right)`` and ``\theta\left(\mu_1\right)``, let ``k=1``, and go to the Main Step.
+
+__Main Step__
+1. If ``b_k-a_k<\ell``, stop; the optimal solution lies in the interval ``\left[a_k, b_k\right]``. Otherwise, if ``\theta\left(\lambda_k\right)>\theta\left(\mu_k\right)``, go to Step 2; and if ``\theta\left(\lambda_k\right) \leq \theta\left(\mu_k\right)``, go to Step 3.
+2. Let ``a_{k+1}=\lambda_k`` and ``b_{k+1}=b_k``. Furthermore, let ``\lambda_{k+1}=\mu_k``, and let ``\mu_{k+1} =a_{k+1}+\alpha\left(b_{k+1}-a_{k+1}\right)``. Evaluate ``\theta\left(\mu_{k+1}\right)`` and go to Step 4.
+3. Let ``a_{k+1}=a_k`` and ``b_{k+1}=\mu_k``. Furthermore, let ``\mu_{k+1}=\lambda_k``, and let ``\lambda_{k+1} =a_{k+1}+(1-\alpha)\left(b_{k+1}-a_{k+1}\right)``. Evaluate ``\theta\left(\lambda_{k+1}\right)`` and go to Step 4.
+4. Replace ``k`` by ``k+1`` and go to Step 1.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -8279,6 +8552,30 @@ version = "1.9.2+0"
 # ╟─625c8d70-5a72-4455-8571-69759db6bd88
 # ╟─c05ae7ef-d602-47c6-8a76-6a7e49247405
 # ╠═17789558-8bcb-44f0-ae1f-4859fbedda29
+# ╟─2741a669-3fd0-4eb7-ab11-ae200f2b4f53
+# ╟─ea6b54f9-3f0c-4270-8138-2ebd3440bdfd
+# ╟─0d3f2e1b-f1ef-4a4b-ab19-b3cd3512c665
+# ╟─6dde70d0-5d23-4ec4-b9cf-e1dbdddf01a2
+# ╟─cff3cc2c-6441-4752-9ee6-c5baf23154a7
+# ╟─ed346f7c-2819-4dde-841b-944ff55dc329
+# ╠═1b74e57a-66ad-4c8a-a0f3-1a103b5d0bf7
+# ╠═73a68ded-2090-4019-800e-b9e539a36e49
+# ╟─b44258cb-0f0f-497d-8ee7-ca61fe7bfa48
+# ╟─56a6de5a-586a-40a4-b9ac-b0055e3a906e
+# ╟─53904956-f967-4e03-bf7f-bcb505daeefa
+# ╟─16c81f53-dd35-4058-b09d-280703585e59
+# ╟─28337e3a-6ea3-478e-ab8a-a722dfc2a720
+# ╟─8a7a1d87-592c-4b0e-8568-9931a13b1f02
+# ╠═870907d9-98c9-487e-9c7b-517a843ccf55
+# ╠═12fa4649-2486-4943-b8ec-429c26f2397b
+# ╟─16c95cd6-c24f-4dda-b308-fc3f41cff239
+# ╟─b2b2ae35-3193-4e59-840c-2e72f93b0069
+# ╠═449ee6cf-1893-4b77-9593-cec5f18a7983
+# ╟─9b51df4c-2b5e-41b2-99f8-435b81665b58
+# ╟─59f960cb-46fb-4c02-bf79-49bf0fb58918
+# ╠═f92394d4-1ecc-493c-bcb1-fe340c2afa8d
+# ╠═9646dc0a-d57b-411c-ac6f-c62af1549ad9
+# ╠═3501c4d3-e24e-407e-a71d-776585016f3a
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
