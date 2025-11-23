@@ -33,7 +33,7 @@ begin
 	using Polyhedra
     # using LinearSolve
     # using NonlinearSolve
-    # using ForwardDiff
+    using ForwardDiff
     # using Integrals
     # using OrdinaryDiffEq
 	# using IntervalArithmetic
@@ -2262,6 +2262,64 @@ cm"""
 ```
 """
 
+# ╔═╡ 25d113c2-611a-44c8-937b-c1c17b9d036c
+begin
+	golden_vis_dev = @bind golden_vis Slider(0.0:0.01:1,show_value=true, default=0.6)
+	cm"""
+	α = $(golden_vis_dev)
+	"""
+end
+
+# ╔═╡ 79e1b633-5369-4c44-bde9-838a226a543c
+let
+	# Define the positions of the points
+	a_k = 0.0
+	b_k = 3.0
+	L = b_k - a_k
+	λ_k = a_k + (1-golden_vis)*L
+	# λ_k = a_k + golden_vis*L
+	μ_k = a_k + (golden_vis)*L
+	# μ_k = b_k - golden_vis*L
+	L1 = round(μ_k - a_k, digits=4)
+	L2 = round(b_k - λ_k , digits=4)
+	# Create the plot
+	p = plot(
+	    [a_k, b_k], [0, 0],
+	    line = (:black, 2),
+	    legend = false,
+	    showaxis = false,
+	    grid = false,
+	    size = (600, 150),
+	    xlims = (a_k - 0.3, b_k + 0.3),
+	    ylims = (-0.5, 0.5),
+	    margin = 5Plots.mm
+	)
+	
+	# Add points
+	scatter!([a_k, λ_k, μ_k, b_k], [0, 0, 0, 0],
+	    markersize = 6,
+	    markercolor = :black,
+	    markerstrokewidth = 0
+	)
+	
+	# Add labels
+	annotate!(a_k, -0.2, text(L"a_k", :center, 12))
+	annotate!(λ_k, -0.2, text(L"\lambda_k", :center, 12))
+	annotate!(μ_k, -0.2, text(L"\mu_k", :center, 12))
+	annotate!(b_k, -0.2, text(L"b_k", :center, 12))
+	cm"""
+	``b_k - \lambda_k = `` $L1  
+	``\mu_k - a_k = `` $L2  
+	
+	$p
+	"""
+end
+
+# ╔═╡ 6c716955-a08b-4aa9-b8fa-1c34900899e3
+let
+	α = (-1+sqrt(5))/2
+end
+
 # ╔═╡ f92394d4-1ecc-493c-bcb1-fe340c2afa8d
 function golden_search(θ,a,b,l,ϵ; maxitrs::Int = 100, verbose::Bool = false)
 	@assert b>a "b must be greater than a"
@@ -2269,7 +2327,6 @@ function golden_search(θ,a,b,l,ϵ; maxitrs::Int = 100, verbose::Bool = false)
 	α2 = 1-α1
 	d = b-a
 	λk, μk = a + α2*d, a + α1*d
-	@show  0.382*d, α2*d
 	θl, θm = θ.((λk, μk))
 	for k in 0:maxitrs
 		if b-a < l
@@ -2297,6 +2354,205 @@ end
 
 # ╔═╡ 3501c4d3-e24e-407e-a71d-776585016f3a
 golden_search(x->x^2+2x,-3.0,5.0, 0.2, 1e-5;verbose=true)
+
+# ╔═╡ 48a4dd6a-1fbd-4882-b6bd-c9b42a7a9fbe
+md"""### Fibonacci Search
+Read it. It is part of the course.
+"""
+
+# ╔═╡ 8751be54-a3ec-460f-8614-e908938d8b42
+md"## 8.5 Multidimensional Search Without Using Derivatives"
+
+# ╔═╡ 0aab579e-013a-47a6-8b81-ffca7e786c00
+md"### Cyclic Coordinate Method"
+
+# ╔═╡ ad0b76a9-6914-4dc9-9d12-06fb2b28b60c
+function cyclic_coordinate(f,x;ϵ=1e-5, maxiters=100, l0=0.5)
+	n = length(x)
+	ds = [[i==j for i in 1:n] for j in 1:n]
+	θ(x,d) = function Θ(λ)
+		f(x+λ*d)
+	end
+	x_old = copy(x)
+	xs = []
+	ls =[[3.13;-1.44],[-0.5;-0.25],[-0.19;-0.09],[-0.09;-0.05],[-0.06;-0.03]]
+	function getY(z,k)
+		y = copy(z)
+		for (j,d) in enumerate(ds)
+			a,b,_  = golden_search(θ(y,d),0,100,l0,ϵ)
+			λ1 = (a+b)/2
+			a,b,_  = golden_search(θ(y,d),-100.0,00,l0,ϵ)
+			λ2 = (a+b)/2
+			# λ2  = armijo_line_search(f,y,-d)
+			# λ2  = armijo_line_search(f,y,-d)
+			y1 = y + λ1*d
+			y2 = y + λ2*d
+			y,λ = f(y1) < f(y2) ? (y1,λ1) : (y2,λ2)
+			@printf("""k = %2d | 
+					λ = %.3f  y = [%.3f, %.3f] 
+					d = [%.3f, %.3f]  f(y) = %.5f\n""",
+                    k, λ, y[1], y[2], d[1], d[2], f(y))
+		end
+		y
+	end
+	push!(xs,x)
+	for k in 1:maxiters
+		x_new =  getY(x_old,k)
+		
+		nrm = norm(x_new-x_old, Inf) 
+		if nrm < ϵ
+			return x,k
+		end
+		@printf("""k = %2d | 
+					|x - y| = %.3f  y = [%.3f, %.3f] 
+					x = [%.3f, %.3f]  f(x) = %.5f\n""",
+                    k, nrm, x_new[1], x_new[2], x_old[1], x_old[2], f(x_new))
+		x_old = copy(x_new)
+		push!(xs,x_new)
+	end
+	# x,f(x), maxiters, xs
+	xs
+end
+
+# ╔═╡ 76ef1da1-88b4-4b9d-88f8-fa260dadb37e
+md""" ### Acceleration Step (pattern search step)
+
+- The search along a direction Xk+l -xk is fiequeiitly used in applying the cyclic coordinate method, even in the case where f is differentiable. The usual rule of thumb is to apply it at every $p$th iteration.
+"""
+
+# ╔═╡ 18ea789b-1114-4ece-9efc-d2a6628fc2c8
+let 
+	function plotit(xs)
+		# Extract x and y coordinates
+		x_coords = [p[1] for p in xs]
+		y_coords = [p[2] for p in xs]
+		
+		# Create the plot
+		p = plot(x_coords, y_coords,
+		    line = (:blue, 2),
+		    marker = (:circle, 6, :red),
+		    legend = false,
+		    xlabel = "x",
+		    ylabel = "y",
+		    title = "Points Connected by Line Segments",
+		    grid = true,
+		    aspect_ratio = :auto,
+		    size = (600, 500)
+		)
+		p
+	end
+	function f(x)
+    x₁, x₂ = x
+	    return (x₁ - 2)^4 + (x₁ - 2x₂)^2
+	end
+	# Initial point
+	x₀ = [0.0, 3.0]
+	
+	# Run the solver
+	# solution = cyclic_coordinate_method_armijo(f, x₀)
+	# println("Solution: ", solution)
+	# println("Objective value: ", f(solution))
+	xs = cyclic_coordinate(f,x₀;ϵ=0.16, maxiters=100)
+	p = plotit(xs)
+	p
+end
+
+# ╔═╡ 53af5de0-a4ff-4370-8134-1afc056dac4b
+md"## 8.2 Line Search Using Derivatives"
+
+# ╔═╡ 52ed520d-327e-49f8-b9b9-536ac00a4f32
+cm"""
+- Bisection Search Method 
+- Newton’s Method
+"""
+
+# ╔═╡ 016e3d4d-96f4-4856-9294-b044dc17c799
+md"### Bisection Search Method"
+
+# ╔═╡ 6ed839b4-2903-4b46-a1ca-c026a26eef4f
+md"### Newton’s Method"
+
+# ╔═╡ 635af6f8-66a0-4960-8414-e52e10afcd52
+cm"""
+```math
+\lambda_{k+1}=\lambda_k-\frac{\theta^{\prime}\left(\lambda_k\right)}{\theta^n\left(\lambda_k\right)}
+```
+
+The procedure is terminated when ``\left|\lambda_{k+1}-\lambda_k\right|<\varepsilon``, or when ``\left|\theta^{\prime}\left(\lambda_k\right)\right|<\varepsilon``, where ``\varepsilon`` is a prespecified termination scalar.
+"""
+
+# ╔═╡ f947a326-fd41-4ce5-88de-659bf4fa483b
+md"## 8.3 Some Practical Line Search Methods"
+
+# ╔═╡ dc0dfb8f-e13e-42a8-bbf3-dcb6096e4f29
+md"### Quadratic-Fit Line Search"
+
+# ╔═╡ e31b1738-c239-4e1e-b6d0-335d58008970
+md"### Inexact Line Searches: Armijo’s Rule "
+
+# ╔═╡ 8036260d-1afb-4ca9-9509-97c316a7f36f
+function armijo_line_search(f, x, d; ϵ=0.2, α=2.0, λ₀=1.0)
+    # Directional derivative θ′(0)
+    ∇f = ForwardDiff.gradient(f, x)
+    θ′₀ = dot(∇f, d)
+    θ̂ = λ -> f(x) + λ * ϵ * θ′₀
+
+    λ = λ₀
+
+    # Armijo acceptability check
+    while f(x + λ * d) > θ̂(λ)
+        λ /= α
+    end
+
+    # Doubling λ as long as Armijo is satisfied
+    while f(x + α * λ * d) <= θ̂(α * λ)
+        λ *= α
+    end
+
+    return λ  # Armijo step length
+end
+
+
+# ╔═╡ a3a2a1f8-b602-4459-be39-ba80133f9aea
+function cyclic_coordinate_method_armijo(f, x₁; tol=1e-6, max_iter=1000, armijo_ϵ=0.2, armijo_α=2.0)
+    n = length(x₁)
+    d = [zeros(n) for j in 1:n]
+    for j in 1:n
+        d[j][j] = 1.0
+    end
+
+    y = copy(x₁)
+    iter = 0
+
+    while iter < max_iter
+        for j in 1:n
+            # Search in both positive and negative directions
+            λ_pos = armijo_line_search(f, y, d[j]; ϵ=armijo_ϵ, α=armijo_α)
+            λ_neg = armijo_line_search(f, y, -d[j]; ϵ=armijo_ϵ, α=armijo_α)
+            x_pos = y .+ λ_pos .* d[j]
+            x_neg = y .- λ_neg .* d[j]
+            y = f(x_pos) < f(x_neg) ? x_pos : x_neg
+        end
+
+        if norm(y - x₁) < tol
+            return y
+        end
+
+        x₁ = copy(y)
+        iter += 1
+    end
+    return x₁
+end
+
+
+# ╔═╡ aaced599-bb58-4b09-9bd6-437f8caa4da6
+let 
+	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
+	df(x)=ForwardDiff.gradient(f,x)
+	x1 = [0.0;3]
+	d = [1.0;0.0]
+	armijo_line_search(f,x1,d; λ₀=100)
+end
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -5910,11 +6166,144 @@ __Main Step__
 4. Replace ``k`` by ``k+1`` and go to Step 1.
 """
 
+# ╔═╡ 5ca0bcaa-c583-453a-b5d3-f2261dcd5106
+cm"""
+$(bbl("Suumary of the Cyclic Coordinate Method",""))
+
+__Initialization Step__ Choose a scalar ``\varepsilon>0`` to be used for terminating the algorithm, and let ``\mathbf{d}_1, \ldots, \mathbf{d}_n`` be the coordinate directions. Choose an initial point ``\mathbf{x}_1``, let ``\mathbf{y}_1=\mathbf{x}_1``, let ``k=j=1``, and go to the Main Step.
+
+__Main Step__
+
+1. Let ``\lambda_j`` be an optimal solution to the problem to minimize ``f\left(\mathbf{y}_j+\lambda \mathbf{d}_j\right)`` subject to ``\lambda \in R``, and let ``\mathbf{y}_{j+1}=\mathbf{y}_j+\lambda_j \mathbf{d}_j``. If ``j< n``, replace ``j`` by ``j+`` 1, and repeat Step 1. Otherwise, if ``j=n``, go to Step 2.
+2. Let ``\mathbf{x}_{k+1}=\mathbf{y}_{n+1}``. If ``\left\|\mathbf{x}_{k+1}-\mathbf{x}_k\right\|<\varepsilon``, then stop. Otherwise, let ``\mathbf{y}_1= \mathbf{x}_{k+1}``, let ``j=1``, replace ``k`` by ``k+1``, and go to Step 1 .
+
+"""
+
+# ╔═╡ c460a5d6-58f5-4142-9650-a722fe72346e
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/6mglp682xuhz48ymqsco7/fig8.7.png?rlkey=k1q9gw0lrmioo6r0r6ftvjtjn&dl=1"))
+"""
+
+# ╔═╡ 339606a7-c9c2-44ab-b67f-a887a2442c99
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/en8ykxa3o5b9wexw6qbng/fig8.8.png?rlkey=54p0gj13ruygfzeabuygc3yn7&dl=1"))
+"""
+
+# ╔═╡ 09c5474d-e3a8-4db9-8d21-b1967e5f0bf3
+cm"""
+$(bbl("Summary of the Bisection Search Method",""))
+
+We now summarize the bisection search procedure for minimizing a pseudoconvex function ``\theta`` over a closed and bounded interval.
+
+__Initialization Step__
+
+Let ``\left[a_1, b_1\right]`` be the initial interval of uncertainty, and let ``\ell`` be the allowable final interval of uncertainty. Let ``n`` be the smallest positive integer such that ``(1 / 2)^n \leq \ell /\left(b_1-a_1\right)``. Let ``k=1`` and go to the Main Step.
+
+__Main Step__
+
+1. Let ``\lambda_k=(1 / 2)\left(a_k+b_k\right)`` and evaluate ``\theta^{\prime}\left(\lambda_k\right)``. If ``\theta^{\prime}\left(\lambda_k\right)=0``, stop; ``\lambda_k`` is an optimal solution. Otherwise, go to Step 2 if ``\theta^{\prime}\left(\lambda_k\right)>0``, and go to Step 3 if ``\theta^{\prime}\left(\lambda_k\right)<0``.
+
+2. Let ``a_{k+1}=a_k`` and ``b_{k+1}=\lambda_k``. Go to Step 4 .
+
+3. Let ``a_{k+1}=\lambda_k`` and ``b_{k+1}=b_k``. Go to Step 4.
+4. If ``k=n``, stop; the minimum lies in the interval ``\left[a_{n+1}, b_{n+1}\right]``. Otherwise, replace ``k`` by ``k+1`` and repeat Step 1 .
+"""
+
+# ╔═╡ e6cd3b32-ec46-43bf-9e12-51bddaf91f7d
+cm"""
+$(theorem("8.2.3"))
+
+Let ``\theta . R \rightarrow R`` be continuously twice differentiable. Consider Newton's algorithm defined by the map ``\mathbf{A}(\lambda)=\lambda-\theta^{\prime}(\lambda) / \theta^{\prime \prime}(\lambda)``. Let ``\bar{\lambda}`` be such that ``\theta^{\prime}(\bar{\lambda})=0 \theta^{\prime \prime}(\bar{\lambda}) \neq 0``. Let the starting point ``\lambda_1`` be sufficiently close to ``\bar{\lambda}`` so that th exist scalars ``k_1, k_2>0`` with ``k_1 k_2<1`` such that
+1. ``\frac{1}{\left|\theta^n(\lambda)\right|} \leq k_1``
+2. ``\frac{\left|\theta(\bar{\lambda})-\theta^{\prime}(\lambda)-\theta^{\prime \prime}(\lambda)(\bar{\lambda}-\lambda)\right|}{(\bar{\lambda}-\lambda)} \leq k_2``
+for each ``\lambda`` satisfying ``|\lambda-\bar{\lambda}| \leq\left|\lambda_1-\bar{\lambda}\right|``. Then the algorithm converges to ``\bar{\lambda}``.
+"""
+
+# ╔═╡ 94705df0-cacf-4410-8071-ac7a0e30479d
+cm"""
+
+$(bbl("Quadratic-Fit Line Search Using the 3-Point Pattern",""))
+
+1. **Initialization**
+   - Given a continuous, strictly quasiconvex function `` \theta(\lambda) `` for `` \lambda \geq 0 ``.
+   - Start with three ordered points: `` 0 \leq \lambda_1 < \lambda_2 < \lambda_3 ``.
+   - Set `` \theta_j = \theta(\lambda_j) `` for `` j=1,2,3 ``.
+
+2. **Check the Three-Point Pattern (TPP)**
+   - Ensure at least one inequality `` \theta_1 > \theta_2 `` or `` \theta_2 < \theta_3 `` holds true.
+
+3. **Trial Point Selection**
+   - Fit a quadratic curve to ``(\lambda_1, \theta_1), (\lambda_2, \theta_2), (\lambda_3, \theta_3)``.
+   - Compute the minimizer `` \bar{\lambda} `` of this quadratic (must lie in ``(\lambda_1, \lambda_3)``).
+   - Evaluate `` \bar{\theta} = \theta(\bar{\lambda}) ``.
+
+4. **Update the Point Set**
+   - Case 1: If `` \bar{\lambda} > \lambda_2 ``:
+     - If `` \bar{\theta} \geq \theta_2 ``, let `` \lambda_{\text{new}} = (\lambda_1, \lambda_2, \bar{\lambda}) ``.
+     - Else, `` \lambda_{\text{new}} = (\lambda_2, \bar{\lambda}, \lambda_3) ``.
+   - Case 2: If `` \bar{\lambda} < \lambda_2 ``:
+     - If `` \bar{\theta} \geq \theta_2 ``, let `` \lambda_{\text{new}} = (\bar{\lambda}, \lambda_2, \lambda_3) ``.
+     - Else, `` \lambda_{\text{new}} = (\lambda_1, \bar{\lambda}, \lambda_2) ``.
+   - Case 3: If `` \bar{\lambda} = \lambda_2 ``:
+     - If `` \lambda_3 - \lambda_1 \leq \epsilon `` (tolerance), terminate with `` \lambda_2 `` as solution.
+     - Otherwise, create a new observation point `` \bar{\lambda} `` at distance `` \epsilon/2 `` from `` \lambda_2 `` toward `` \lambda_1 `` or `` \lambda_3 ``, whichever is farther, and repeat steps above.
+
+5. **Termination Criteria**
+   - If point updates yield step length within convergence tolerance `` \epsilon ``, or other stopping criteria (e.g., derivative zero for differentiable case), stop and return the minimizer.
+
+6. **Repeat**
+   - Repeat fitting and update steps using the new set `` (\lambda_1, \lambda_2, \lambda_3) `` until convergence criteria are met and the minimizer is found.
+
+**Remarks:**
+- At each step, the quadratic fit guides where to place the next query point.
+- The method is suitable for strictly quasiconvex, possibly pseudoconvex and differentiable functions, and supports inexact line search terminologies as described.
+
+
+"""
+
+# ╔═╡ 3db031bc-57d0-4b19-8542-6e97d16d5128
+cm"""
+$(bbl("Inexact Line Search Using Armijo’s Rule",""))
+
+1. **Parameter Setup**
+   - Choose parameters:
+     - `` 0 < \epsilon < 1 `` (typical: `` \epsilon = 0.2 ``)
+     - `` \alpha > 1 `` (typical: `` \alpha = 2 ``)
+   - You are minimizing a differentiable function `` f:\mathbb{R}^n \rightarrow \mathbb{R} `` at `` \bar{x} `` in direction `` d `` with `` \nabla f(\bar{x})^T d < 0 `` (i.e., `` d `` is a descent direction).
+   - Define the line search function as `` \theta(\lambda) = f(\bar{x} + \lambda d) `` for `` \lambda \geq 0 ``.
+
+2. **Armijo’s Acceptability Condition**
+   - Let `` \hat{\theta}(\lambda) = \theta(0) + \lambda \epsilon \theta'(0) ``.
+   - For a candidate step `` \bar{\lambda} ``:
+     - **Accept** `` \bar{\lambda} `` if `` \theta(\bar{\lambda}) \leq \hat{\theta}(\bar{\lambda}) ``.
+     - **Reject** `` \bar{\lambda} `` if `` \theta(\bar{\lambda}) > \hat{\theta}(\bar{\lambda}) ``.
+   - Additionally, to prevent steps being too small, require: `` \theta(\alpha \bar{\lambda}) > \hat{\theta}(\alpha \bar{\lambda}) ``.
+
+3. **Step-Length Selection Procedure**
+   - Start from a fixed initial guess for `` \bar{\lambda} ``.
+   - If `` \theta(\bar{\lambda}) \leq \hat{\theta}(\bar{\lambda}) ``:
+     - Select `` \bar{\lambda} `` as the step, or
+     - Double `` \bar{\lambda} `` successively (multiply by `` \alpha ``) to find the largest integer `` t \geq 0 `` such that `` \theta(\alpha^t \bar{\lambda}) \leq \hat{\theta}(\alpha^t \bar{\lambda}) ``.
+   - Else (if `` \theta(\bar{\lambda}) > \hat{\theta}(\bar{\lambda}) ``):
+     - Halve `` \bar{\lambda} `` successively (divide by `` \alpha ``) to find the smallest integer `` t \geq 1 `` such that `` \theta(\bar{\lambda}/\alpha^t) \leq \hat{\theta}(\bar{\lambda}/\alpha^t) ``.
+
+4. **Termination and Application**
+   - The selected `` \bar{\lambda} `` is used as the step length for the next iterate in your algorithm (e.g., steepest descent).
+   - This guarantees a sufficient decrease and prevents step lengths from being too small or too large.
+
+**Remarks:**
+- Armijo’s rule is a practical way to ensure sufficient decrease in function value without excessive computation.
+- The step-length is adjusted iteratively until both acceptability (descent) and non-triviality (not too small) are satisfied.
+
+
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 CommonMark = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
@@ -5937,6 +6326,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 [compat]
 Colors = "~0.12.11"
 CommonMark = "~0.9.1"
+ForwardDiff = "~1.2.2"
 HypertextLiteral = "~0.9.5"
 Ipopt = "~1.12.1"
 JuMP = "~1.29.2"
@@ -5958,7 +6348,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "5c6970f13ad20157ea9ac3ed9d315d4e308cc5be"
+project_hash = "f5cc5beb2c8d23e05e24fbc477f03c55f6aeeb86"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -8558,7 +8948,7 @@ version = "1.9.2+0"
 # ╟─6dde70d0-5d23-4ec4-b9cf-e1dbdddf01a2
 # ╟─cff3cc2c-6441-4752-9ee6-c5baf23154a7
 # ╟─ed346f7c-2819-4dde-841b-944ff55dc329
-# ╠═1b74e57a-66ad-4c8a-a0f3-1a103b5d0bf7
+# ╟─1b74e57a-66ad-4c8a-a0f3-1a103b5d0bf7
 # ╠═73a68ded-2090-4019-800e-b9e539a36e49
 # ╟─b44258cb-0f0f-497d-8ee7-ca61fe7bfa48
 # ╟─56a6de5a-586a-40a4-b9ac-b0055e3a906e
@@ -8572,10 +8962,37 @@ version = "1.9.2+0"
 # ╟─b2b2ae35-3193-4e59-840c-2e72f93b0069
 # ╠═449ee6cf-1893-4b77-9593-cec5f18a7983
 # ╟─9b51df4c-2b5e-41b2-99f8-435b81665b58
+# ╟─25d113c2-611a-44c8-937b-c1c17b9d036c
+# ╟─79e1b633-5369-4c44-bde9-838a226a543c
+# ╠═6c716955-a08b-4aa9-b8fa-1c34900899e3
 # ╟─59f960cb-46fb-4c02-bf79-49bf0fb58918
 # ╠═f92394d4-1ecc-493c-bcb1-fe340c2afa8d
 # ╠═9646dc0a-d57b-411c-ac6f-c62af1549ad9
 # ╠═3501c4d3-e24e-407e-a71d-776585016f3a
+# ╟─48a4dd6a-1fbd-4882-b6bd-c9b42a7a9fbe
+# ╟─8751be54-a3ec-460f-8614-e908938d8b42
+# ╟─0aab579e-013a-47a6-8b81-ffca7e786c00
+# ╟─5ca0bcaa-c583-453a-b5d3-f2261dcd5106
+# ╠═a3a2a1f8-b602-4459-be39-ba80133f9aea
+# ╟─c460a5d6-58f5-4142-9650-a722fe72346e
+# ╠═ad0b76a9-6914-4dc9-9d12-06fb2b28b60c
+# ╟─339606a7-c9c2-44ab-b67f-a887a2442c99
+# ╟─76ef1da1-88b4-4b9d-88f8-fa260dadb37e
+# ╟─18ea789b-1114-4ece-9efc-d2a6628fc2c8
+# ╟─53af5de0-a4ff-4370-8134-1afc056dac4b
+# ╟─52ed520d-327e-49f8-b9b9-536ac00a4f32
+# ╟─016e3d4d-96f4-4856-9294-b044dc17c799
+# ╟─09c5474d-e3a8-4db9-8d21-b1967e5f0bf3
+# ╟─6ed839b4-2903-4b46-a1ca-c026a26eef4f
+# ╟─635af6f8-66a0-4960-8414-e52e10afcd52
+# ╟─e6cd3b32-ec46-43bf-9e12-51bddaf91f7d
+# ╟─f947a326-fd41-4ce5-88de-659bf4fa483b
+# ╟─dc0dfb8f-e13e-42a8-bbf3-dcb6096e4f29
+# ╟─94705df0-cacf-4410-8071-ac7a0e30479d
+# ╟─e31b1738-c239-4e1e-b6d0-335d58008970
+# ╟─3db031bc-57d0-4b19-8542-6e97d16d5128
+# ╠═8036260d-1afb-4ca9-9509-97c316a7f36f
+# ╠═aaced599-bb58-4b09-9bd6-437f8caa4da6
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
