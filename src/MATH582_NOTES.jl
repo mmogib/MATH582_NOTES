@@ -2466,6 +2466,9 @@ cm"""
 - Newton’s Method
 """
 
+# ╔═╡ 645fd177-f321-40df-91fc-cecb45cdeeb5
+
+
 # ╔═╡ 016e3d4d-96f4-4856-9294-b044dc17c799
 md"### Bisection Search Method"
 
@@ -2475,7 +2478,7 @@ md"### Newton’s Method"
 # ╔═╡ 635af6f8-66a0-4960-8414-e52e10afcd52
 cm"""
 ```math
-\lambda_{k+1}=\lambda_k-\frac{\theta^{\prime}\left(\lambda_k\right)}{\theta^n\left(\lambda_k\right)}
+\lambda_{k+1}=\lambda_k-\frac{\theta^{\prime}\left(\lambda_k\right)}{\theta''\left(\lambda_k\right)}
 ```
 
 The procedure is terminated when ``\left|\lambda_{k+1}-\lambda_k\right|<\varepsilon``, or when ``\left|\theta^{\prime}\left(\lambda_k\right)\right|<\varepsilon``, where ``\varepsilon`` is a prespecified termination scalar.
@@ -2487,6 +2490,75 @@ md"## 8.3 Some Practical Line Search Methods"
 # ╔═╡ dc0dfb8f-e13e-42a8-bbf3-dcb6096e4f29
 md"### Quadratic-Fit Line Search"
 
+# ╔═╡ 92754c7a-6492-44c1-bd67-1a693b0f6750
+function quadratic_fit_search(f,x, d;ϵ=1e-2,maxitrs=100, l0=0.2)
+	λ1,λ2,λ3 = 0.0, 2.0, 3.0
+	∇f(λ) = ForwardDiff.gradient(f, x+λ*d)
+	θ(λ) = f(x + λ * d) 
+    θ_prime(λ) = λ * dot(∇f(λ), d)
+	Λ = [λ1,λ2,λ3]
+	A(Λ) = reshape([λ^(i-1) for i in 1:3 for λ in Λ],3,3)
+	b(Λ) = θ.(Λ)
+	λ_bar(Λ) = begin 
+		sol=A(Λ)\b(Λ)
+		-2sol[3]/sol[2]
+	end
+	λ = λ_old = λ2
+	for k in 1:maxitrs
+		λ,λ2 = λ_bar(Λ), Λ[2]
+		L = Λ[3]-Λ[1]
+		# @show θ_prime(λ)
+		if  L <l0 || θ_prime(λ) < ϵ
+			return λ, k
+		end
+		θ_bar, θ2 = θ(λ), θ(λ2)
+		
+		if abs(λ-λ2) < ϵ/10
+			if Λ[3]-Λ[2] < ϵ
+				return Λ[2], k
+			else
+				@show l1, l2 =Λ[2]-Λ[1], Λ[3]-Λ[2] 
+				Λ = if l2 >= l1 
+					
+					[Λ[2], Λ[2] +ϵ*l2/2, Λ[3]]
+				else
+					[Λ[1], Λ[1] +ϵ*l1/2, Λ[2]]
+				end
+			end
+		elseif λ>λ2
+			Λ = if θ_bar>=θ2
+				[Λ[1],Λ[2],λ]
+			else
+				[Λ[2],λ,Λ[3]]
+			end
+		else
+			Λ = if θ_bar>=θ2
+				[λ,Λ[2],Λ[3]]
+			else
+				[Λ[1],λ,Λ[2]]
+			end
+		end
+
+		if abs(λ-λ_old) < ϵ
+			return λ, k
+		end
+		λ_old = λ
+	end
+	λ, maxitrs
+end
+
+# ╔═╡ 10269503-f9a0-4e00-b8ce-e3cb9677bd3d
+let
+	function f(x)
+    x₁, x₂ = x
+	    return (x₁ - 2)^4 + (x₁ - 2x₂)^2
+	end
+	# Initial point
+	x = [0.0, 3.0]
+	d = [0.5;1.0]
+	quadratic_fit_search(f,x, d;ϵ=1e-5,maxitrs=1000)
+end
+
 # ╔═╡ e31b1738-c239-4e1e-b6d0-335d58008970
 md"### Inexact Line Searches: Armijo’s Rule "
 
@@ -2494,18 +2566,19 @@ md"### Inexact Line Searches: Armijo’s Rule "
 function armijo_line_search(f, x, d; ϵ=0.2, α=2.0, λ₀=1.0)
     # Directional derivative θ′(0)
     ∇f = ForwardDiff.gradient(f, x)
+	θ(λ) = f(x + λ * d) 
     θ′₀ = dot(∇f, d)
     θ̂ = λ -> f(x) + λ * ϵ * θ′₀
 
     λ = λ₀
 
     # Armijo acceptability check
-    while f(x + λ * d) > θ̂(λ)
+    while  θ(λ) > θ̂(λ)
         λ /= α
     end
 
     # Doubling λ as long as Armijo is satisfied
-    while f(x + α * λ * d) <= θ̂(α * λ)
+    while θ(α * λ) <= θ̂(α * λ)
         λ *= α
     end
 
@@ -2553,6 +2626,125 @@ let
 	d = [1.0;0.0]
 	armijo_line_search(f,x1,d; λ₀=100)
 end
+
+# ╔═╡ 0c57da81-5df1-46d0-ac67-163cfe4b7f2f
+md"## 8.6 Multidimensional Search Using Derivatives"
+
+# ╔═╡ 75ccae6f-26cc-4401-886a-b05af9e6d5eb
+md"### Method of Steepest Descent "
+
+# ╔═╡ 0be96335-5f2e-4ffe-8513-4390170c44ab
+function steepest_descent_method(f, x₁; ε=1e-6, maxiter=100, history=false)
+    x = x₁
+	xs = history ? [x] : []
+    for iter in 1:maxiter
+	    ∇f = ForwardDiff.gradient(f, x)
+        
+        if norm(∇f) < ε
+            return history ? (x, iter, xs) : (x, iter)
+        end
+        
+        d = -∇f
+        λ, = armijo_line_search(f, x, d)
+        x = x + λ * d
+		history && push!(xs,x)
+    end
+	return history ? (x, maxiter, xs) : (x, maxiter)
+end
+
+# ╔═╡ 49de9ef6-1379-454a-a95c-fba4ec07aad2
+md"### Method of Newton"
+
+# ╔═╡ cdcda323-ed9e-4289-885c-2fc3beeb3696
+cm"""
+ consider the following approximation ``q`` at a given point ``x_k``:
+```math
+q(\mathbf{x})=f\left(\mathbf{x}_k\right)+\nabla f\left(\mathbf{x}_k\right)^t\left(\mathbf{x}-\mathbf{x}_k\right)+\frac{1}{2}\left(\mathbf{x}-\mathbf{x}_k\right)^t \mathbf{H}\left(\mathbf{x}_k\right)\left(\mathbf{x}-\mathbf{x}_k\right),
+```
+where ``\mathbf{H}\left(\mathbf{x}_k\right)`` is the Hessian matrix of ``f`` at ``\mathbf{x}_k``. A necessary condition for a minimum of the quadratic approximation ``q`` is that ``\nabla q(\mathbf{x})=\mathbf{0}``, or ``\nabla f\left(\mathbf{x}_k\right)+ \mathbf{H}\left(\mathbf{x}_k\right)\left(\mathbf{x}-\mathbf{x}_k\right)=\mathbf{0}``. Assuming that the inverse of ``\mathbf{H}\left(\mathbf{x}_k\right)`` exists, the successor point ``\mathbf{x}_{k+1}`` is given by
+```math
+\mathbf{x}_{k+1}=\mathbf{x}_k-\mathbf{H}\left(\mathbf{x}_k\right)^{-1} \nabla f\left(\mathbf{x}_k\right) .
+```
+"""
+
+# ╔═╡ ec2cc643-df84-46aa-aa42-b928b9ad0c0d
+function newton_method(f, x₁; ε=1e-6, maxiter=100, history=false)
+    x = x₁
+	xs = history ? [x] : []
+	
+    for iter in 1:maxiter
+	    ∇f = ForwardDiff.gradient(f, x)
+	    H = ForwardDiff.hessian(f, x)
+        
+        if norm(∇f) < ε
+            return  history ? (x, iter, xs) : (x, iter)
+        end
+        
+        d = -H\∇f
+        # λ, = armijo_line_search(f, x, d)
+        x = x + d
+		history && push!(xs,x)
+    end
+	return history ? (x, maxiter, xs) : (x, maxiter)
+end
+
+# ╔═╡ a9adb06e-17d8-4859-bdd3-495e1da4a5e3
+function plot_iterates(f, iterates; xlims=(-1, 3), ylims=(-1, 3), animate=false, fps=2)
+    x = range(xlims[1], xlims[2], length=100)
+    y = range(ylims[1], ylims[2], length=100)
+    z = [f([xi, yi]) for yi in y, xi in x]
+    if animate
+		anim = @animate for i in 1:length(iterates)
+			contour(x, y, z, levels=[0.1, 0.2, 0.5, 1, 3, 5, 8, [8+3i for i in 1:8]...], 				color=:black, linewidth=1.5, cbar = false)
+    
+    xs = [x[1] for x in iterates[1:i]]
+    ys = [x[2] for x in iterates[1:i]]
+    
+    plot!(xs, ys, marker=:circle, markersize=2, color=:black, 
+          linewidth=1.0, label="", markerstrokewidth=0,
+		  frame_style=:origin,
+		  xlims=xlims,ylims=ylims
+		  
+		 
+		 )
+		end
+		return gif(anim, fps=fps)
+	else
+    contour(x, y, z, levels=[0.1, 0.2, 0.5, 1, 3, 5, 8, [8+3i for i in 1:8]...], 				color=:black, linewidth=1.5, cbar = false)
+    
+    xs = [x[1] for x in iterates]
+    ys = [x[2] for x in iterates]
+    
+    p = plot!(xs, ys, marker=:circle, markersize=4, color=:black, 
+          linewidth=1.5, label="", markerstrokewidth=0,
+		  frame_style=:origin
+		 
+		 )
+		return p
+	end
+end
+
+# ╔═╡ 8a9d4a03-b8d2-4867-ad9a-ad4db3971187
+let
+	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
+	df(x)=ForwardDiff.gradient(f,x)
+	x1 = [0.0;3]
+	x, iters, xs = steepest_descent_method(f, x1; ε=1e-5,maxiter=20, history=true)
+	plot_iterates(f, xs; xlims=(-0.2, 3.5), ylims=(-0.5, 3.5), animate=true)
+	# plot_iterates(f, xs; xlims=(2, 2.5), ylims=(0.5, 1.5), animate=true)
+end
+
+# ╔═╡ 07ee1757-645a-4998-8dd8-30da35f8cd80
+let
+	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
+	df(x)=ForwardDiff.gradient(f,x)
+	x1 = [0.0;3]
+	x,iters, xs = newton_method(f, x1; ε=1e-7,maxiter=8, history=true)
+	plot_iterates(f, xs; xlims=(-0.2, 3.5), ylims=(-1, 3), animate=true)
+end
+
+# ╔═╡ c876cd2d-4367-4edc-b8a9-b3c389d73096
+
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -6298,6 +6490,32 @@ $(bbl("Inexact Line Search Using Armijo’s Rule",""))
 
 """
 
+# ╔═╡ 5bb955ec-d599-4142-999f-e121637353f7
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/x1v40hqj88zks4ftbaryj/fig8.6.png?rlkey=cl7wfrvfsj7f0hv2n47ipu9f3&dl=1"))
+"""
+
+# ╔═╡ fc160456-abf9-41b1-aa50-872adc127cc7
+cm"""
+$(lemma("8.6.1"))
+
+Suppose that ``f: R^n \rightarrow R`` is differentiable at ``\mathbf{x}``, and suppose that ``\nabla f(\mathbf{x}) \neq \mathbf{0}``. Then the optimal solution to the problem to minimize ``f^{\prime}(\mathbf{x} ; \mathbf{d})`` subject to ``\|\mathbf{d}\| \leq 1`` is given by ``\overline{\mathbf{d}}=-\nabla f(\mathbf{x}) /\|\nabla f(\mathbf{x})\|``; that is, ``-\nabla f(\mathbf{x}) /\|\nabla f(\mathbf{x})\|`` is the direction of steepest descent of ``f`` at ``\mathbf{x}``.
+"""
+
+# ╔═╡ 8a865093-c5f6-456f-9fba-3a69e98d027a
+cm"""
+$(bbl("Summary of the Steepest Descent Algorithm",""))
+Given a point ``\mathbf{x}``, the steepest descent algorithm proceeds by performing a line search along the direction ``-\nabla f(\mathbf{x}) /\|\nabla f(\mathbf{x})\|`` or, equivalently, along the direction ``-\nabla f(\mathbf{x})``. A summary of the method is given below.
+
+__Initialization Step__ 
+
+Let ``\varepsilon>0`` be the termination scalar. Choose a starting point ``\mathbf{x}_1``, let ``k=1``, and go to the Main Step.
+
+__Main Step__
+
+If ``\left\|\nabla f\left(\mathbf{x}_k\right)\right\|<\varepsilon``, stop; otherwise, let ``\mathbf{d}_k=-\nabla f\left(\mathbf{x}_k\right)``, and let ``\lambda_k`` be an optimal solution to the problem to minimize ``f\left(\mathbf{x}_k+\lambda \mathbf{d}_k\right)`` subject to ``\lambda \geq`` 0 . Let ``\mathbf{x}_{k+1}=\mathbf{x}_k+\lambda_k \mathbf{d}_k``, replace ``k`` by ``k+1``, and repeat the Main Step.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -8963,7 +9181,7 @@ version = "1.9.2+0"
 # ╠═449ee6cf-1893-4b77-9593-cec5f18a7983
 # ╟─9b51df4c-2b5e-41b2-99f8-435b81665b58
 # ╟─25d113c2-611a-44c8-937b-c1c17b9d036c
-# ╟─79e1b633-5369-4c44-bde9-838a226a543c
+# ╠═79e1b633-5369-4c44-bde9-838a226a543c
 # ╠═6c716955-a08b-4aa9-b8fa-1c34900899e3
 # ╟─59f960cb-46fb-4c02-bf79-49bf0fb58918
 # ╠═f92394d4-1ecc-493c-bcb1-fe340c2afa8d
@@ -8978,9 +9196,10 @@ version = "1.9.2+0"
 # ╠═ad0b76a9-6914-4dc9-9d12-06fb2b28b60c
 # ╟─339606a7-c9c2-44ab-b67f-a887a2442c99
 # ╟─76ef1da1-88b4-4b9d-88f8-fa260dadb37e
-# ╟─18ea789b-1114-4ece-9efc-d2a6628fc2c8
+# ╠═18ea789b-1114-4ece-9efc-d2a6628fc2c8
 # ╟─53af5de0-a4ff-4370-8134-1afc056dac4b
 # ╟─52ed520d-327e-49f8-b9b9-536ac00a4f32
+# ╠═645fd177-f321-40df-91fc-cecb45cdeeb5
 # ╟─016e3d4d-96f4-4856-9294-b044dc17c799
 # ╟─09c5474d-e3a8-4db9-8d21-b1967e5f0bf3
 # ╟─6ed839b4-2903-4b46-a1ca-c026a26eef4f
@@ -8989,10 +9208,25 @@ version = "1.9.2+0"
 # ╟─f947a326-fd41-4ce5-88de-659bf4fa483b
 # ╟─dc0dfb8f-e13e-42a8-bbf3-dcb6096e4f29
 # ╟─94705df0-cacf-4410-8071-ac7a0e30479d
+# ╠═92754c7a-6492-44c1-bd67-1a693b0f6750
+# ╠═10269503-f9a0-4e00-b8ce-e3cb9677bd3d
 # ╟─e31b1738-c239-4e1e-b6d0-335d58008970
 # ╟─3db031bc-57d0-4b19-8542-6e97d16d5128
+# ╟─5bb955ec-d599-4142-999f-e121637353f7
 # ╠═8036260d-1afb-4ca9-9509-97c316a7f36f
 # ╠═aaced599-bb58-4b09-9bd6-437f8caa4da6
+# ╟─0c57da81-5df1-46d0-ac67-163cfe4b7f2f
+# ╟─75ccae6f-26cc-4401-886a-b05af9e6d5eb
+# ╟─fc160456-abf9-41b1-aa50-872adc127cc7
+# ╟─8a865093-c5f6-456f-9fba-3a69e98d027a
+# ╠═0be96335-5f2e-4ffe-8513-4390170c44ab
+# ╠═8a9d4a03-b8d2-4867-ad9a-ad4db3971187
+# ╟─49de9ef6-1379-454a-a95c-fba4ec07aad2
+# ╟─cdcda323-ed9e-4289-885c-2fc3beeb3696
+# ╠═ec2cc643-df84-46aa-aa42-b928b9ad0c0d
+# ╠═a9adb06e-17d8-4859-bdd3-495e1da4a5e3
+# ╠═07ee1757-645a-4998-8dd8-30da35f8cd80
+# ╠═c876cd2d-4367-4edc-b8a9-b3c389d73096
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
