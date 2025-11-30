@@ -25,6 +25,7 @@ begin
     using HypertextLiteral
     using Colors
     using LinearAlgebra, Random, Printf, SparseArrays, Statistics
+	using Distributions
     using Symbolics
     # using SymPy
     using QRCoders
@@ -2568,7 +2569,7 @@ function armijo_line_search(f, x, d; ϵ=0.2, α=2.0, λ₀=1.0)
     ∇f = ForwardDiff.gradient(f, x)
 	θ(λ) = f(x + λ * d) 
     θ′₀ = dot(∇f, d)
-    θ̂ = λ -> f(x) + λ * ϵ * θ′₀
+    θ̂(λ) = f(x) + λ * ϵ * θ′₀
 
     λ = λ₀
 
@@ -2652,6 +2653,16 @@ function steepest_descent_method(f, x₁; ε=1e-6, maxiter=100, history=false)
 	return history ? (x, maxiter, xs) : (x, maxiter)
 end
 
+# ╔═╡ 8a9d4a03-b8d2-4867-ad9a-ad4db3971187
+let
+	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
+	df(x)=ForwardDiff.gradient(f,x)
+	x1 = [0.0;3]
+	x, iters, xs = steepest_descent_method(f, x1; ε=1e-5,maxiter=10_000, history=true)
+	# plot_iterates(f, xs; xlims=(-0.2, 3.5), ylims=(-0.5, 3.5), animate=true)
+	# plot_iterates(f, xs; xlims=(2, 2.5), ylims=(0.5, 1.5), animate=true)
+end
+
 # ╔═╡ 49de9ef6-1379-454a-a95c-fba4ec07aad2
 md"### Method of Newton"
 
@@ -2724,27 +2735,152 @@ function plot_iterates(f, iterates; xlims=(-1, 3), ylims=(-1, 3), animate=false,
 	end
 end
 
-# ╔═╡ 8a9d4a03-b8d2-4867-ad9a-ad4db3971187
-let
-	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
-	df(x)=ForwardDiff.gradient(f,x)
-	x1 = [0.0;3]
-	x, iters, xs = steepest_descent_method(f, x1; ε=1e-5,maxiter=20, history=true)
-	plot_iterates(f, xs; xlims=(-0.2, 3.5), ylims=(-0.5, 3.5), animate=true)
-	# plot_iterates(f, xs; xlims=(2, 2.5), ylims=(0.5, 1.5), animate=true)
-end
-
 # ╔═╡ 07ee1757-645a-4998-8dd8-30da35f8cd80
 let
 	f(x)=(x[1]-2)^4 + (x[1]-2x[2])^2
 	df(x)=ForwardDiff.gradient(f,x)
-	x1 = [0.0;3]
-	x,iters, xs = newton_method(f, x1; ε=1e-7,maxiter=8, history=true)
+	x1 = [100.0;300.0]
+	x,iters, xs = newton_method(f, x1; ε=1e-7,maxiter=100, history=true)
 	plot_iterates(f, xs; xlims=(-0.2, 3.5), ylims=(-1, 3), animate=true)
 end
 
 # ╔═╡ c876cd2d-4367-4edc-b8a9-b3c389d73096
+md"## 8.9 Subgradient Optimization "
 
+# ╔═╡ e97b8f0f-a6fb-410a-a37d-f4b136a9dd4d
+cm"""
+Consider Problem P, defined as
+```math
+\text { P: Minimize }\{f(\mathbf{x}): \mathbf{x} \in X\},
+```
+- where ``f: R^n \rightarrow R`` is a convex but __not necessarily differentiable function__ and 
+- where ``X`` is a nonempty, closed, convex subset of ``R^n``. 
+
+We assume that an optimal solution exists, as it would be, for example, if ``X`` is bounded or if ``f(\mathbf{x}) \rightarrow \infty`` whenever ``\|\mathbf{x}\| \rightarrow \infty``. (i.e. ``f`` is __coercive__)
+"""
+
+# ╔═╡ 1e2a51c8-fccc-4eda-af0d-3fdc58efdb78
+function lambda_k_update(k, xk, f, ξk, f_best, f_star, β, λ_prev, fail_count, ν)
+    # ξk = subgrad(xk)
+    norm_ξ = max(norm(ξk), 1e-12)  # prevent division by zero
+    f_current = f(xk)
+    f_bar = f_star === nothing ? f_best : f_star
+
+    # Eq. (8.77): λₖ = βₖ * [f(xₖ) - f̄] / ||ξₖ||
+    λk = β * (f_current - f_bar) / norm_ξ
+
+    # Halve λ if no improvement for ν consecutive iterations
+    if fail_count ≥ ν
+        λk = λ_prev / 2
+        fail_count = 0
+        println("Halving λ at iteration $k → new λ = $(round(λk, sigdigits=4))")
+    end
+
+    return λk, fail_count
+end
+
+# ╔═╡ 9692b1f0-75fd-40ee-b3e1-57d4fe10b6de
+function subgradient_method(f, subgrad, P, x1;
+                            max_iter=1000, ε=1e-6, f_opt=nothing)
+
+    # --- Initialization ---
+    xk = x1
+    f_best = f(xk)
+    x_best = xk
+    λ_prev = 1.0
+    fail_count = 0
+
+    # Block halving parameters
+    β_values = [0.75, 0.5, 0.25]  # block scaling factors
+    r = 75                        # iterations per block
+    ν = 10                        # failures before halving λ
+
+    # --- Main Loop ---
+    for k in 1:max_iter
+        ξk, = subgrad(xk)
+
+        # Stop if near-stationary
+        if norm(ξk) < ε
+            println("Terminated: subgradient approximately zero at iteration $k.")
+            return x_best, f_best, k
+        end
+
+        # Determine block β
+        β = β_values[min(ceil(Int, k / r), length(β_values))]
+
+        # --- Step-size update (Eq. 8.77 + halving rule) ---
+        λk, fail_count = lambda_k_update(k, xk, f, ξk, f_best, f_opt,
+                                         β, λ_prev, fail_count, ν)
+
+        # Take projected subgradient step
+        dk = -ξk / norm(ξk)
+        x̄k = xk + λk * dk
+        x_next = P(x̄k)
+        f_next = f(x_next)
+
+        # --- Update best solution ---
+        if f_next < f_best
+            f_best = f_next
+            x_best = x_next
+            fail_count = 0  # reset on improvement
+        else
+            fail_count += 1
+        end
+
+        # --- Stopping if optimal value known ---
+        if f_opt !== nothing && abs(f_next - f_opt) ≤ ε
+            println("Terminated: reached target objective within ε = $ε at iteration $k.")
+            return x_best, f_best, k
+        end
+
+        # --- Optional early stop: no improvement for long ---
+        if fail_count ≥ 5ν
+            println("Terminated: stagnation after $(fail_count) non-improving iterations.")
+            return x_best, f_best, k
+        end
+
+        # Prepare for next iteration
+        λ_prev = λk
+        xk = x_next
+    end
+
+    println("Terminated: reached maximum iterations ($max_iter).")
+    return x_best, f_best, max_iter
+end
+
+
+# ╔═╡ 973e8647-90db-4b3e-b513-e505c07a79d0
+let
+	U0 = Uniform(-1.0,1.0)
+	rng = Xoshiro(25)
+	f(x,y) = max(-x,x+y,x-2y)
+	f(x::Vector)=f(x...)
+	function subgradient_f(x::Vector)
+	    # define linear components
+	    f1 = -x[1]
+	    f2 = x[1] + x[2]
+	    f3 = x[1] - 2x[2]
+	    vals = [f1, f2, f3]
+	    fmax = maximum(vals)
+	
+	    # active indices (tolerance to handle ties)
+	    active = findall(v -> abs(v - fmax) < 1e-8, vals)
+	
+	    # gradients of each component
+	    grads = [[-1.0, 0.0], [1.0, 1.0], [1.0, -2.0]]
+	
+	    # if multiple are active, return convex combination (average)
+	    g = rand(grads[active])
+		
+	    return g, active
+	end
+	P(x) = map(y->clamp(y,-1,1),x)
+	# subgradient_f([0.0;-00.0])
+	x1=[10.0;10.50]
+	x_best, f_best, k = subgradient_method(f, subgradient_f, P, x1; max_iter=2000)
+	 # = subgradient_method(f, subgrad_f, P, [2.0, 1.0]; max_iter=200)
+println("Best x = ", x_best, ", f = ", f_best, ", iterations = ", k)
+end
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 begin
@@ -6516,11 +6652,75 @@ __Main Step__
 If ``\left\|\nabla f\left(\mathbf{x}_k\right)\right\|<\varepsilon``, stop; otherwise, let ``\mathbf{d}_k=-\nabla f\left(\mathbf{x}_k\right)``, and let ``\lambda_k`` be an optimal solution to the problem to minimize ``f\left(\mathbf{x}_k+\lambda \mathbf{d}_k\right)`` subject to ``\lambda \geq`` 0 . Let ``\mathbf{x}_{k+1}=\mathbf{x}_k+\lambda_k \mathbf{d}_k``, replace ``k`` by ``k+1``, and repeat the Main Step.
 """
 
+# ╔═╡ a4effc69-1868-4b70-82de-5c139b5fa3c1
+cm"""
+$(bbl("Summary of a  Subgradient Algorithm",""))
+
+__Initialization Step__ Select a starting solution ``\mathbf{x}_1 \in X``, let the current upper bound on the optimal objective value be ``\mathrm{UB}_1=f\left(\mathrm{x}_1\right)``, and let the current incumbent solution be ``\mathbf{x}^*=\mathbf{x}_1``. Put ``k=1``, and go to the Main Step.
+
+__Main Step__ Given ``\mathbf{x}_k``, 
+- find a subgradient ``\xi_k \in \partial f\left(\mathbf{x}_k\right)`` of ``f`` at ``\mathbf{x}_k``. 
+- If ``\xi_k=\mathbf{0}``, then stop; ``\mathbf{x}_k`` (or ``\mathbf{x}^*`` ) solves Problem P. 
+- Otherwise, let ``\mathbf{d}_k= -\xi_k /\left\|\xi_k\right\|``, select a step size ``\lambda_k>0``, and 
+- compute ``\mathbf{x}_{k+1}=P_X\left(\overline{\mathbf{x}}_{k+1}\right)``, where ``\overline{\mathbf{x}}_{k+1}=\mathbf{x}_k+\lambda_k \mathbf{d}_k``. If ``f\left(\mathbf{x}_{k+1}\right)<\mathrm{UB}_k``, put ``\mathrm{UB}_{k+1}=f\left(\mathbf{x}_{k+1}\right)`` and ``\mathbf{x}^*= \mathrm{x}_{k+1}``. Otherwise, let ``\mathrm{UB}_{k+1}=\mathrm{UB}_k``. 
+- Increment ``k`` by 1 and repeat the Main Step.
+
+"""
+
+# ╔═╡ 5a06c94a-b042-4db4-9f66-ac560c73c22e
+cm"""
+$(bbl("Remarks",""))
+```math 
+P_X(\overline{\mathbf{x}}) \equiv \operatorname{argmin}\{\|\mathbf{x}-\overline{\mathbf{x}}\|: \mathbf{x} \in X\}.
+```
+
+__Examples of Projections__
+- If ``X=\{x: x_i \geq 0 \text{ for each component } i =1,\cdots,n\}``, then
+```math 
+P_X(\overline{x})_i = \max(0,x_i)\quad  \text{ for each component } i =1,\cdots,n
+```
+- If ``X=\{x: l_i\leq x_i \leq u_i, i =1,\cdots,n\}``, then
+```math 
+P_X(\overline{x})_i = \max(l_i,\min(x_i,u_i))\quad  i =1,\cdots,n
+```
+In Julia use `clamp`
+"""
+
+# ╔═╡ ea61ff6c-69a6-4b3b-804b-2430510644f8
+cm"""
+$(ex("Example",""))
+
+Consider the following Problem P:
+```math
+\begin{aligned}
+& \min \{f(x, y):-1 \leq x \leq 1,-1 \leq y \leq 1\} \\
+& \text { where } f(x, y)=\max \{-x, x+y, x-2 y\} .
+\end{aligned}
+```
+"""
+
+# ╔═╡ f9d58f9c-8115-4eb0-b6de-750ab710fa01
+cm"""
+$(theorem("8.9.2"))
+
+Let Problem P be as above and assume that an optimum exists. 
+Consider the foregoing subgradient optimization algorithm to solve Problem P, and suppose that the prescribed nonnegative step size sequence ``\left\{\lambda_k\right\}``
+satisfies the conditions 
+```math
+\left\{\lambda_k\right\} \rightarrow 0^{+}\quad \text{and} \quad\sum_{k=0}^{\infty} \lambda_k=\infty.
+```
+Then, either the algorithm terminates finitely with an optimal solution, or else an infinite sequence is generated such that
+```math
+\left\{\mathrm{UB}_k\right\} \rightarrow f^* \equiv \min \{f(\mathbf{x}): \mathbf{x} \in X\}
+```
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 CommonMark = "a80b9123-70ca-4bc0-993e-6e3bcb318db6"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
 Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
@@ -6544,6 +6744,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 [compat]
 Colors = "~0.12.11"
 CommonMark = "~0.9.1"
+Distributions = "~0.25.122"
 ForwardDiff = "~1.2.2"
 HypertextLiteral = "~0.9.5"
 Ipopt = "~1.12.1"
@@ -6566,7 +6767,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.12.1"
 manifest_format = "2.0"
-project_hash = "f5cc5beb2c8d23e05e24fbc477f03c55f6aeeb86"
+project_hash = "d34e171719e542ead384b2bb72027b09a3ca6258"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "27cecae79e5cc9935255f90c53bb831cc3c870d7"
@@ -9226,7 +9427,15 @@ version = "1.9.2+0"
 # ╠═ec2cc643-df84-46aa-aa42-b928b9ad0c0d
 # ╠═a9adb06e-17d8-4859-bdd3-495e1da4a5e3
 # ╠═07ee1757-645a-4998-8dd8-30da35f8cd80
-# ╠═c876cd2d-4367-4edc-b8a9-b3c389d73096
+# ╟─c876cd2d-4367-4edc-b8a9-b3c389d73096
+# ╟─e97b8f0f-a6fb-410a-a37d-f4b136a9dd4d
+# ╟─a4effc69-1868-4b70-82de-5c139b5fa3c1
+# ╟─5a06c94a-b042-4db4-9f66-ac560c73c22e
+# ╠═9692b1f0-75fd-40ee-b3e1-57d4fe10b6de
+# ╟─ea61ff6c-69a6-4b3b-804b-2430510644f8
+# ╠═973e8647-90db-4b3e-b513-e505c07a79d0
+# ╠═1e2a51c8-fccc-4eda-af0d-3fdc58efdb78
+# ╟─f9d58f9c-8115-4eb0-b6de-750ab710fa01
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
