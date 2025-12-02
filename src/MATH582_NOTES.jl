@@ -2759,26 +2759,6 @@ Consider Problem P, defined as
 We assume that an optimal solution exists, as it would be, for example, if ``X`` is bounded or if ``f(\mathbf{x}) \rightarrow \infty`` whenever ``\|\mathbf{x}\| \rightarrow \infty``. (i.e. ``f`` is __coercive__)
 """
 
-# ╔═╡ 1e2a51c8-fccc-4eda-af0d-3fdc58efdb78
-function lambda_k_update(k, xk, f, ξk, f_best, f_star, β, λ_prev, fail_count, ν)
-    # ξk = subgrad(xk)
-    norm_ξ = max(norm(ξk), 1e-12)  # prevent division by zero
-    f_current = f(xk)
-    f_bar = f_star === nothing ? f_best : f_star
-
-    # Eq. (8.77): λₖ = βₖ * [f(xₖ) - f̄] / ||ξₖ||
-    λk = β * (f_current - f_bar) / norm_ξ
-
-    # Halve λ if no improvement for ν consecutive iterations
-    if fail_count ≥ ν
-        λk = λ_prev / 2
-        fail_count = 0
-        println("Halving λ at iteration $k → new λ = $(round(λk, sigdigits=4))")
-    end
-
-    return λk, fail_count
-end
-
 # ╔═╡ 9692b1f0-75fd-40ee-b3e1-57d4fe10b6de
 function subgradient_method(f, subgrad, P, x1;
                             max_iter=1000, ε=1e-6, f_opt=nothing)
@@ -2809,8 +2789,9 @@ function subgradient_method(f, subgrad, P, x1;
         β = β_values[min(ceil(Int, k / r), length(β_values))]
 
         # --- Step-size update (Eq. 8.77 + halving rule) ---
-        λk, fail_count = lambda_k_update(k, xk, f, ξk, f_best, f_opt,
-                                         β, λ_prev, fail_count, ν)
+        λk, fail_count = 1/k, 0.0
+			# lambda_k_update(k, xk, f, ξk, f_best, f_opt,
+                                         # β, λ_prev, fail_count, ν)
 
         # Take projected subgradient step
         dk = -ξk / norm(ξk)
@@ -2876,10 +2857,99 @@ let
 	end
 	P(x) = map(y->clamp(y,-1,1),x)
 	# subgradient_f([0.0;-00.0])
-	x1=[10.0;10.50]
-	x_best, f_best, k = subgradient_method(f, subgradient_f, P, x1; max_iter=2000)
+	x1=[-10.0;10.50]
+	x_best, f_best, k = subgradient_method(f, subgradient_f, P, x1; max_iter=1000)
 	 # = subgradient_method(f, subgrad_f, P, [2.0, 1.0]; max_iter=200)
 println("Best x = ", x_best, ", f = ", f_best, ", iterations = ", k)
+end
+
+# ╔═╡ 1e2a51c8-fccc-4eda-af0d-3fdc58efdb78
+function lambda_k_update(k, xk, f, ξk, f_best, f_star, β, λ_prev, fail_count, ν)
+    # ξk = subgrad(xk)
+    norm_ξ = max(norm(ξk), 1e-12)  # prevent division by zero
+    f_current = f(xk)
+    f_bar = f_star === nothing ? f_best : f_star
+
+    # Eq. (8.77): λₖ = βₖ * [f(xₖ) - f̄] / ||ξₖ||
+    λk = β * (f_current - f_bar) / norm_ξ
+
+    # Halve λ if no improvement for ν consecutive iterations
+    if fail_count ≥ ν
+        λk = λ_prev / 2
+        fail_count = 0
+        println("Halving λ at iteration $k → new λ = $(round(λk, sigdigits=4))")
+    end
+
+    return λk, fail_count
+end
+
+# ╔═╡ f20bbeb5-6c08-4dc2-bbcd-952d32f0117d
+md"""# Chapter 9: Penalty and Barrier Functions 
+## 9.1 Concept of Penalty Functions 
+"""
+
+# ╔═╡ 9db4771d-a711-4f4d-b90c-cc02c6ef7f19
+begin
+	ex_911_div = @bind μ_911 Slider(0.01:0.1:100.0, show_value=true)
+	cm"""
+
+	``\mu = ``$(ex_911_div)
+	
+	"""
+end
+
+# ╔═╡ b5c429c2-057d-42dc-b46d-000fea7b19f6
+let
+	f(x) = x
+	α(x) = x >= 2 ? 0 : (2-x)^2
+	P(x) = f(x) + μ_911 * α(x)
+	OptPoint=[2-1/(2*μ_911);P(2-1/(2*μ_911))]
+	OptPointRep = round.(OptPoint, digits=2)
+	p = plot([x->μ_911*α(x),P], frame_style=:origin, xlimits=(-1,5), ylimits=(-0.5, 10), labels=[L"\alpha(x)" L"f(x) + %$μ_911 \alpha(x)"], title=L"\mu=%$(μ_911)",
+		)
+	scatter(p,[OptPoint[1]],[OptPoint[2]], label="Optimal",
+		   annotations=[(OptPoint-[0.0;0.4]...,L"(%$(OptPointRep[1]),%$(OptPointRep[2]))", 10)])
+end
+
+# ╔═╡ 5b9b03c7-1665-40f9-a825-026db700bc7f
+md"### Geometric Interpretation of Penalty Functions"
+
+# ╔═╡ 4d38f034-f43d-49fe-a89e-5d791fc60041
+cm"""
+For the previous example, consider the lower envolope function 
+```math
+\begin{aligned} \nu(\epsilon) \equiv & \min x_1^2 + x_2^2\\ & \text { subject to } \\ & x_1+x_2 -1 =\epsilon \\ & \end{aligned}
+```
+"""
+
+# ╔═╡ 8ee656db-94dc-46d3-a3aa-e81c1477ca39
+begin
+	ex_912_div1 = @bind μ_912 Slider(-100:0.1:100.0, show_value=true)
+	ex_912_div2 = @bind k_912 Slider(-5:0.5:5.0, show_value=true)
+	cm"""
+
+	``\mu = ``$(ex_912_div1)   ``k = ``$(ex_912_div2)
+	
+	"""
+end
+
+# ╔═╡ 4a3e6e24-ee8b-48af-b0e4-1571b58165e5
+let
+	f(x1,x2) = x1^2 + x2^2
+	h(x1,x2)= x1+x2-1
+	xs = -20.0:0.1:20.0
+	ys = -20.0:.1:20.0
+	X = [(x,y) for x in xs for y in ys ]
+	Y = map(((x,y),)->(h(x,y),f(x,y)), X) |> unique 
+	HF=unique(x->x[1],Y)|> sort
+	α = map(((x,y),)-> (x,y + μ_912*x^2 - k_912),zip(xs,xs))
+	scatter(first.(Y), last.(Y), ms=0.5, msw=0.0,
+			frame_style=:origin,
+			label = L"G"
+			
+		   )
+	plot!(ϵ -> (1+ϵ)^2/2, lw=5, label=L"\nu = (1+\epsilon)^2/2", legend=:topright)
+	# plot!(first.(α), last.(α), ylimits=(-1,2), xlimits=(-1,2))
 end
 
 # ╔═╡ 42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
@@ -6715,6 +6785,76 @@ Then, either the algorithm terminates finitely with an optimal solution, or else
 ```
 """
 
+# ╔═╡ a91b36b7-5856-4517-831b-ad860311e3b9
+cm"""
+Considering a constrainted optimization problem, 
+
+$(eql_latex_gi())
+
+the idea of penalty functions to move the constraints to the objective function in a way that __penalizes__ any voilations of the constraints. A suitable penalty function must incur a positive penalty for infeasible points and no penalty for feasible points. 
+
+The __unconstrained__ problem is
+
+```math
+\min~ f(x)~ +\mu \alpha(x)
+```
+Where the penalty function ``\alpha``is usually of the form
+```math
+\alpha(\mathbf{x})=\sum_{i=1}^m\left[\max \left\{0, g_i(\mathbf{x})\right\}\right]^p+\sum_{i=1}^{\ell}\left|h_i(\mathbf{x})\right|^p .
+```
+and ``p`` is a positive integer. 
+
+- The function ``f(\mathbf{x})+\mu \alpha(\mathbf{x})`` is called the __auxiliary function__. 
+
+
+"""
+
+# ╔═╡ 59238145-b3b0-49b7-847e-6134e21f420f
+cm"""
+$(ex("Example","9.1.1"))
+
+Consider the following problem:
+```math
+\begin{array}{ll}
+\text { Minimize } & x \\
+\text { subject to } & -x+2 \leq 0 .
+\end{array}
+```
+
+Let ``\alpha(x)=[\max \{0, g(x)\}]^2``. Then
+```math
+\alpha(x)= \begin{cases}0 & \text { if } x \geq 2 \\ (-x+2)^2 & \text { if } x<2 .\end{cases}
+```
+"""
+
+# ╔═╡ 85d99d20-5126-43fb-8474-24aa853b9d68
+cm"""
+$(ex("Example","9.1.2 "))
+
+Consider the following problem:
+```math
+\begin{array}{ll}
+\text { Minimize } & x_1^2+x_2^2 \\
+\text { subject to } & x_1+x_2-1=0 .
+\end{array}
+```
+
+Now, consider the following penalty problem, where ``\mu>0`` is a large number:
+```math
+\begin{array}{ll}
+\text { Minimize } & x_1^2+x_2^2+\mu\left(x_1+x_2-1\right)^2 \\
+\text { subject to } & \left(x_1, x_2\right) \in R^2
+\end{array}
+```
+
+Note that for any ``\mu \geq 0``, the objective function is convex. 
+"""
+
+# ╔═╡ ed330267-6a3c-4730-89c0-04806ae48e4f
+cm"""
+$(post_img("https://www.dropbox.com/scl/fi/a7oa72irmw7tnn5ilwfzx/fig9.2.png?rlkey=0yn1ifzl5ton5hezq0lfsejc6&dl=1"))
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -9436,6 +9576,17 @@ version = "1.9.2+0"
 # ╠═973e8647-90db-4b3e-b513-e505c07a79d0
 # ╠═1e2a51c8-fccc-4eda-af0d-3fdc58efdb78
 # ╟─f9d58f9c-8115-4eb0-b6de-750ab710fa01
+# ╟─f20bbeb5-6c08-4dc2-bbcd-952d32f0117d
+# ╟─a91b36b7-5856-4517-831b-ad860311e3b9
+# ╟─59238145-b3b0-49b7-847e-6134e21f420f
+# ╟─9db4771d-a711-4f4d-b90c-cc02c6ef7f19
+# ╠═b5c429c2-057d-42dc-b46d-000fea7b19f6
+# ╟─85d99d20-5126-43fb-8474-24aa853b9d68
+# ╟─5b9b03c7-1665-40f9-a825-026db700bc7f
+# ╟─4d38f034-f43d-49fe-a89e-5d791fc60041
+# ╟─8ee656db-94dc-46d3-a3aa-e81c1477ca39
+# ╟─4a3e6e24-ee8b-48af-b0e4-1571b58165e5
+# ╟─ed330267-6a3c-4730-89c0-04806ae48e4f
 # ╠═41c749c0-500a-11f0-0eb8-49496afa257e
 # ╟─42f6c9db-97d9-4852-a4c3-f7bbcb055a0f
 # ╟─fc877247-39bc-4bb0-8bda-1466fcb00798
